@@ -8,4 +8,5 @@ Dependencies:
   Optional
     FCGI             to run in a FastCGI environment
     Time::HiRes      with debugging enabled
+    PerlIO::gzip     output compression
 

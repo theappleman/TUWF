@@ -92,6 +92,7 @@ sub log_warning {
 # object. These functions are not inherited by the main YAWF namespace.
 package YAWF::Object;
 
+use YAWF::Response;
 use YAWF::Request;
 use YAWF::DB;
 
@@ -124,7 +125,7 @@ sub handle_request {
 
     # initialize request and response objects
     $self->reqInit();
-    #$self->resInit();
+    $self->resInit();
     
     # make sure our DB connection is still there and start a new transaction
     $self->dbCheck();
@@ -171,7 +172,7 @@ sub handle_request {
   }
 
   # finalize response (flush output, etc)
-  # eval { $self->resFinish; }
+  eval { $self->resFinish; };
   warn $@ if $@;
 
   if($self->debug) {

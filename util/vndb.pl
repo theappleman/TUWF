@@ -35,6 +35,15 @@ our %O = (
 require $ROOT.'/data/config.pl' if -e $ROOT.'/data/config.pl';
 
 
-YAWF::init(%O);
+YAWF::init(
+  %O,
+  error_404_handler => \&page_404,
+);
 
+
+sub page_404 {
+  my $self = shift;
+  my $fd = $self->resFd;
+  print $fd "Wheeeee~ output!\n";
+}
 
