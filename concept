@@ -1,0 +1,118 @@
+
+YAWF::* ("Yet Another Web Framework" or "Yorhels Awesome Web Framework"):
+  This module provides an abstract interface to all I/O and other
+  environment-specific functions
+  - Implements functions to fetch request info (currently VNDB::Util::Request)
+    - form validation (currently VNDB::Util::Tools::FormCheck())
+    - file uploading
+  - Implements output functions (currently VNDB::Util::Response + template
+    system)
+    - using an improved version HTML::Writer, allowing XML output as well
+    - output is buffered, headers can be changed after writing html/xml
+  - Database connection and query handling
+  - functions to send email?
+
+
+
+VNDB::* namespace (implements all VNDB-specific functions)
+  VNDB::DB::*
+    Basically the current VNDB::Util::DB, but split into several files and
+    without the connection and query handling routines (as they are provided
+    by YAWF)
+  VNDB::Util::*
+    Random utility functions for use in VNDB::Handler::* files
+  VNDB::Handler::*
+    URI handles, similar to the current VNDB::* modules.
+
+
+
+There's one 'object' (similar to the current $self) which inherits all exported
+functions from all modules, and can be used to store request-specific data.
+This object can be reused for subsequent requests, so care should be taken to
+manually clear all data.
+YAWF::init() is responsible for creating this object and loading and importing
+all modules and functions.
+
+
+
+The "main" file (which would combine the current (f)cgi.pl and VNDB.pm) would
+look something like:
+
+  use YAWF;
+
+  # note: all these options to init() can be loaded from a config file, obviously
+  YAWF::init(
+    namespace => 'VNDB', # core namespace for this site
+    db_login => [ 'dbi:Pg:dbname=vndb', 'vndb', 'passwd' ],
+    debug => 1,
+    logfile => 'data/log/error.log',
+    
+   # these are optional
+    object_data => {     # variables that should be present in the main object,
+      version => '1.23', # these variables can be accessed from anywhere (this
+      cookie_key => 'a', # is pretty much everything in the current global.pl)
+    },
+    pre_request_handler => sub {},
+    post_request_handler => sub {},
+    error_404_handler => sub {}, # when no VNDB::Handler::* function found
+    error_500_handler => sub {}, # called when the handler die()'ed
+  );
+
+
+
+A VNDB::Handler::* file would be something like:
+
+  package VNDB::Handler::Example;
+
+  use YAWF ':html';  # import the html output functions
+
+  YAWF::register(    # maps URLs to functions by using regexes
+    qr{^/$},              \&homepage,
+    qr{^/v(\d+)$},        \&vnpage,
+    qr{^/v(\d+)\.(\d+)$}, \&vnrevision,
+  );
+
+  sub homepage { # will be called with the global object as argument
+    my $self = shift;
+    $self->htmlHeader('Homepage'); # defined in one of the VNDB::Util::* files
+    p 'Hi!';       # html output function
+    # ..
+    $self->htmlFooter;
+  }
+
+  sub vnpage { # will be called with global object and VN ID
+    #..
+  }
+
+  sub vnrevision { # will be called with global object, VN ID and rev. ID
+    #..
+  }
+
+
+
+An example VNDB::Util::* file:
+
+  package VNDB::Util::CommonHTML;
+
+  use YAWF ':html';  # we use html output functions again
+
+  # specify which functions should be available in the global object
+  use Exporter;
+  our @EXPORT = ('htmlHeader', 'htmlFooter');
+
+  sub htmlHeader { # object and 'Homepage' as argument
+    my($self, $title) = @_;
+    html;
+     head;
+      title $title;
+    #..
+  }
+
+  sub htmlFooter { # object as argument
+    my $self = shift;
+    p sprintf '%d Visual Novels!',
+      $self->dbGetVNCount(); # defined in one of the VNDB::DB::* files
+    end;
+    end;
+  }
+
