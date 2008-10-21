@@ -21,7 +21,7 @@ use YAWF;
 
 YAWF::init(
   namespace => 'VNDB',
-  logfile => $ROOT.'/data/logs',
+  logfile => $ROOT.'/data/logs/err.log',
   # etc...
 );
 
