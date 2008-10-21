@@ -77,10 +77,7 @@ sub log_warning {
     seek $F, 0, 2;
     while(local $_ = shift) {
       chomp;
-      # should use req* methods instead of ENV vars...
-      printf $F "[%s] %s: %s\n", scalar localtime(),
-        $ENV{HTTP_HOST} && $ENV{HTTP_REQUEST_URI} ? $ENV{HTTP_HOST}.$ENV{REQUEST_URI}.'?'.$ENV{QUERY_STRING} : '[non-request]',
-        $_ 
+      printf $F "[%s] %s: %s\n", scalar localtime(), $OBJ->reqFullURI||'[init]', $_;
     }
     flock $F, 4;
     close $F;
@@ -95,6 +92,7 @@ sub log_warning {
 # object. These functions are not inherited by the main YAWF namespace.
 package YAWF::Object;
 
+use YAWF::Request;
 use YAWF::DB;
 
 
@@ -125,7 +123,7 @@ sub handle_request {
   eval { 
 
     # initialize request and response objects
-    #$self->reqInit();
+    $self->reqInit();
     #$self->resInit();
     
     # make sure our DB connection is still there and start a new transaction

@@ -3,6 +3,8 @@
 Dependencies:
   Required
     DBI
+    CGI::Minimal
+    CGI::Cookie::XS
   Optional
     FCGI             to run in a FastCGI environment
     Time::HiRes      with debugging enabled
