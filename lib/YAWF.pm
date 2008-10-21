@@ -18,6 +18,7 @@ my @handlers;
 sub init {
   my %o = @_;
   die "No namespace argument specified!" if !$o{namespace};
+  die "db_login argument required!" if !$o{db_login};
 
   # create object
   $OBJ = bless {
@@ -25,11 +26,14 @@ sub init {
     $o{object_data} && ref $o{object_data} eq 'HASH' ? %{ delete $o{object_data} } : (),
   }, 'YAWF::Object';
 
+  # load optional modules
+  require Time::HiRes if $OBJ->debug;
+
   # load the modules
   $OBJ->load_modules;
 
   # initialize DB connection
-  #$OBJ->dbInit;
+  $OBJ->dbInit;
 
   # plain old CGI
   if($ENV{GATEWAY_INTERFACE} && $ENV{GATEWAY_INTERFACE} =~ /CGI/i) {
@@ -46,7 +50,7 @@ sub init {
   }
 
   # close the DB connection
-  #$OBJ->dbDisconnect;
+  $OBJ->dbDisconnect;
 }
 
 
@@ -60,6 +64,8 @@ sub register {
 # The namespace which inherits all functions to be available in the global
 # object. These functions are not inherited by the main YAWF namespace.
 package YAWF::Object;
+
+use YAWF::DB;
 
 
 # This function will load all site modules and import the exported functions
@@ -89,7 +95,7 @@ sub handle_request {
   #$self->resInit();
   
   # make sure our DB connection is still there and start a new transaction
-  #$self->dbCheck();
+  $self->dbCheck();
 
   # find the handler
   my $loc = ''; #$self->resLocation;
@@ -101,6 +107,12 @@ sub handle_request {
       next;
     }
   }
+}
+
+
+# convenience function
+sub debug {
+  return shift->{_YAWF}{debug};
 }
 
 

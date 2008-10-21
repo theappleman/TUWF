@@ -19,10 +19,22 @@ BEGIN {
 use lib $ROOT.'/lib';
 use YAWF;
 
-YAWF::init(
+
+# default options
+our %O = (
+ # required
   namespace => 'VNDB',
+  db_login => [ 'dbi:Pg:dbname=vndb', 'vndb', 'passwd' ],
+ # optional
+  debug => 1,
   logfile => $ROOT.'/data/logs/err.log',
-  # etc...
 );
+
+
+# ...can be overwritten in data/config.pl
+require $ROOT.'/data/config.pl' if -e $ROOT.'/data/config.pl';
+
+
+YAWF::init(%O);
 
 

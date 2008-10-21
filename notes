@@ -1,0 +1,9 @@
+                        Random notes while developing YAWF
+
+Dependencies:
+  Required
+    DBI
+  Optional
+    FCGI             to run in a FastCGI environment
+    Time::HiRes      with debugging enabled
+
