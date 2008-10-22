@@ -80,7 +80,7 @@ sub reqFullURI {
 
 
 sub reqHost {
-  return $END{HTTP_HOST};
+  return $ENV{HTTP_HOST};
 }
 
 
