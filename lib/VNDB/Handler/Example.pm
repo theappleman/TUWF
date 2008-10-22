@@ -20,6 +20,11 @@ sub envdump {
   # environment-specific information...
   print  $fd "ENV-Dump:\n";
   printf $fd "  %s: %s\n", $_, $ENV{$_} for (sort keys %ENV);
+
+  # ...like this
+  print  $fd "\n";
+  print  $fd "Header dump:\n";
+  printf $fd "  %s: %s\n", $_, $self->reqHeader($_) for ($self->reqHeader());
 }
 
 

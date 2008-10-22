@@ -65,9 +65,25 @@ sub reqMethod {
 }
 
 
+# Returns list of header names when no argument is passed
+#   (may be in a different order and can have different casing than
+#    the original headers - CGI doesn't preserve that information)
+# Returns value of the specified header otherwise, header name is
+#   case-insensitive
 sub reqHeader {
-  (my $v = uc $_[1]) =~ tr/-/_/;
-  return $ENV{"HTTP_$v"}||'';
+  my($self, $name) = @_;
+  if($name) {
+    (my $v = uc $_[1]) =~ tr/-/_/;
+    return $ENV{"HTTP_$v"}||'';
+  } else {
+    return (map {
+      if(/^HTTP_/) { 
+        (my $h = lc $_) =~ s/_([a-z])/-\U$1/g;
+        $h =~ s/^http-//;
+        $h;
+      } else { () }
+    } sort keys %ENV);
+  }
 }
 
 
