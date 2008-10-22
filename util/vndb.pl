@@ -45,6 +45,6 @@ sub page_404 {
   my $self = shift;
   my $fd = $self->resFd;
   print $fd "Wheeeee~ output!\n";
-  die "Hey, I died!\n";
+  return 404;
 }
 

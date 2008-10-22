@@ -147,7 +147,13 @@ sub handle_request {
     }
     
     # execute handler
-    $han->($self);
+    my $ret = $han->($self);
+
+    # give 404 page if the handler returned 404...
+    if($ret && $ret eq '404') {
+      $ret = $self->{_YAWF}{error_404_handler}->($self) if $han ne $self->{_YAWF}{error_404_handler};
+      YAWF::DefaultHandlers::error_404($self) if $ret && $ret eq '404';
+    }
 
     # execute post request handler, if any
     $self->{_YAWF}{post_request_handler}->($self) if $self->{_YAWF}{post_request_handler};
