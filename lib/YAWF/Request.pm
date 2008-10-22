@@ -17,6 +17,12 @@ our @EXPORT = qw|
 sub reqInit {
   my $self = shift;
 
+  # lighttpd doesn't always split the query string from REQUEST_URI
+  if($ENV{SERVER_SOFTWARE} =~ /lighttpd/) {
+    ($ENV{REQUEST_URI}, $ENV{QUERY_STRING}) = split /\?/, $ENV{REQUEST_URI}, 2
+      if ($ENV{REQUEST_URI}||'') =~ /\?/;
+  }
+
   # reset and re-initialise some vars to make CGI::Minimal work in FastCGI
   CGI::Minimal::reset_globals;
   CGI::Minimal::allow_hybrid_post_get(1);
