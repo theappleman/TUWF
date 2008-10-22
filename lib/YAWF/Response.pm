@@ -8,7 +8,7 @@ use Exporter 'import';
 
 
 our @EXPORT = qw|
-  resInit resHeader resFd resStatus resRedirect resFinish
+  resInit resHeader resBuffer resFd resStatus resRedirect resFinish
 |;
 
 
@@ -27,8 +27,8 @@ sub resInit {
   open $self->{_YAWF}{Res}{fd}, '>:utf8', \$self->{_YAWF}{Res}{content};
 
   # enable output compression by default if the PerlIO::gzip module is available
-  # (we don't check for browser support or even content, though it's possible to
-  #  disable the gzip compression layer later on via resCompress)
+  # (we don't check for browser support or even content, but it's possible to
+  #  disable the gzip compression layer later on via resBuffer)
   eval { require PerlIO::gzip; };
   if(!$@) {
     binmode $self->{_YAWF}{Res}{fd}, ':gzip';
@@ -73,6 +73,37 @@ sub resHeader {
     for (@r ? 0..$#r : ());
 
   return @_ == 3 || @_ == 2 && !wantarray ? $h[0] : @h;
+}
+
+
+# Argument    Action
+#  none        Returns whether gzip compression is enabled or not
+#  undef       Clears the internal buffer
+#  0           Clears buffer and disables gzip
+#  1           Clears and enables gzip
+# Enabling compression if PerlIO::gzip isn't installed will result in an error
+sub resBuffer {
+  my $self = shift;
+  my $i = $self->{_YAWF}{Res};
+  my $h = $self->resHeader('Content-Encoding');
+  $h = $h && $h eq 'gzip';
+
+  if(@_) {
+    # clear buffer
+    close $i->{fd};
+    $i->{content} = '';
+    open $i->{fd}, '>:utf8', \$i->{content};
+
+    if(!defined $_[0] && $h || $_[0]) {
+      binmode $i->{fd}, ':gzip';
+      $self->resHeader('Content-Encoding', 'gzip');
+    } else {
+      $self->resHeader('Content-Encoding', undef);
+    }
+  }
+
+  $h = $self->resHeader('Content-Encoding');
+  return $h && $h eq 'gzip';
 }
 
 
@@ -122,42 +153,5 @@ sub resFinish {
 
 
 1;
-
-
-
-__END__
-
-
-
-# Returns whether output compression is enabled or not with no arguments,
-# Enables or disables compression with argument
-# Enabling compression if PerlIO::gzip isn't installed will result in an error
-# This setting can't be changed after something has been written to the buffer
-
-# Forget it... this idea isn't going to work. The :gzip layer will add a gzip 
-# header as soon as it's activated... so disabling the layer afterwards isn't
-# really going to help as the header is still there
-
-# ...time to think of an alternative solution
-
-sub resCompress {
-  my $self = shift;
-  my $h = $self->resHeader('Content-Encoding');
-  $h = $h && $h eq 'gzip';
-
-  if(@_) {
-    if($h && !$_[0]) {
-      binmode $self->{_YAWF}{Res}{fd}, ':pop';
-      $self->resHeader('Content-Encoding', undef);
-    }
-    elsif(!$h && $_[0]) {
-      binmode $self->{_YAWF}{Res}{fd}, ':gzip';
-      $self->resHeader('Content-Encoding', 'gzip');
-    }
-  }
-
-  $h = $self->resHeader('Content-Encoding');
-  return $h && $h eq 'gzip';
-}
 
 

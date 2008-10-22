@@ -42,9 +42,9 @@ YAWF::init(
 
 
 sub page_404 {
-  die "Hey, I died!\n";
   my $self = shift;
   my $fd = $self->resFd;
   print $fd "Wheeeee~ output!\n";
+  die "Hey, I died!\n";
 }
 
