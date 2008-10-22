@@ -40,9 +40,12 @@ sub reqInit {
 # Perl's internal UTF-8 format, and returns an empty string on undef.
 sub reqParam {
   my($s, $n) = @_;
-  return wantarray
-    ? map { defined $_ ? decode_utf8 $_ : '' } $s->{_YAWF}{Req}{c}->param($n)
-    : defined $s->{_YAWF}{Req}{c}->param($n) ? decode_utf8 $s->{_YAWF}{Req}{c}->param($n) : '';
+  if($n) {
+    return wantarray
+      ? map { defined $_ ? decode_utf8 $_ : '' } $s->{_YAWF}{Req}{c}->param($n)
+      : defined $s->{_YAWF}{Req}{c}->param($n) ? decode_utf8 $s->{_YAWF}{Req}{c}->param($n) : '';
+  }
+  return $s->{_YAWF}{Req}{c}->param();
 }
 
 

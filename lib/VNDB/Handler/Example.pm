@@ -25,6 +25,11 @@ sub envdump {
   print  $fd "\n";
   print  $fd "Header dump:\n";
   printf $fd "  %s: %s\n", $_, $self->reqHeader($_) for ($self->reqHeader());
+
+  # ..and this
+  print  $fd "\n";
+  print  $fd "Param dump:\n";
+  printf $fd "  %s: %s\n", $_, $self->reqParam($_) for ($self->reqParam());
 }
 
 
