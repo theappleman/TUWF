@@ -7,7 +7,8 @@ use YAWF;
 
 
 YAWF::register(
-  qr/envdump/,  \&envdump
+  qr/envdump/,  \&envdump,
+  qr/error/,    \&error,
 );
 
 
@@ -30,6 +31,15 @@ sub envdump {
   print  $fd "\n";
   print  $fd "Param dump:\n";
   printf $fd "  %s: %s\n", $_, $self->reqParam($_) for ($self->reqParam());
+}
+
+
+sub error {
+  # this handler demonstrates a function that fails, YAWF
+  # should display a 500 error page and write a detailed
+  # report to the log file
+  warn "A random warning message before the error actually occurs";
+  die "Some descriptive error message here";
 }
 
 

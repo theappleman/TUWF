@@ -73,7 +73,7 @@ sub register {
 
 # Writes warning messages to the log file (if there is a log file)
 sub log_warning {
-  if($YAWF::OBJ->{_YAWF}{logfile} && open my $F, '>>', $YAWF::OBJ->{_YAWF}{logfile}) {
+  if($YAWF::OBJ->{_YAWF}{logfile} && open my $F, '>>:utf8', $YAWF::OBJ->{_YAWF}{logfile}) {
     flock $F, 2;
     seek $F, 0, 2;
     while(local $_ = shift) {
@@ -164,6 +164,8 @@ sub handle_request {
 
   # error handling
   if($@) {
+    chomp( my $err = $@ );
+
     # act as if the changes to the DB never happened
     eval { $self->dbRollBack; };
     warn $@ if $@;
@@ -180,7 +182,20 @@ sub handle_request {
       YAWF::DefaultHandlers::error_500($self);
     }
 
-    # some logging here...
+    # write detailed information about this error to the log
+    if($self->{_YAWF}{logfile} && open my $F, '>>:utf8', $self->{_YAWF}{logfile}) {
+      flock $F, 2;
+      seek $F, 0, 2;
+      printf $F "[%s] %s: FATAL ERROR!\n", scalar localtime(), $self->reqURI||'[init]';
+      print  $F "HTTP Request Headers:\n";
+      printf $F "  %s: %s\n", $_, $self->reqHeader($_) for ($self->reqHeader);
+      print  $F "Param dump:\n";
+      printf $F "  %s: %s\n", $_, $self->reqParam($_) for ($self->reqParam);
+      print  $F "Error:\n";
+      printf $F "  %s\n", $err;
+      flock $F, 4;
+      close $F;
+    }
   }
 
   # finalize response (flush output, etc)
