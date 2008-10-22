@@ -44,7 +44,6 @@ YAWF::init(
 sub page_404 {
   my $self = shift;
   my $fd = $self->resFd;
-  print $fd "Wheeeee~ output!\n";
-  return 404;
+  print $fd "This is our custom 404 error page!\n";
 }
 
