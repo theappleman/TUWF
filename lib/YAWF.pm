@@ -136,12 +136,12 @@ sub handle_request {
     $self->{_YAWF}{pre_request_handler}->($self) if $self->{_YAWF}{pre_request_handler};
 
     # find the handler
-    my $loc = ''; #$self->reqLocation;
+    my $loc = $self->reqURI;
     study $loc;
     my $han = $self->{_YAWF}{error_404_handler};
-    for (@handlers ? 0..@handlers/2 : ()) {
-      if($loc =~ /^$handlers[$_]$/) {
-        $han = $handlers[$_+1];
+    for (@handlers ? 0..$#handlers/2 : ()) {
+      if($loc =~ /$handlers[$_*2]/) {
+        $han = $handlers[$_*2+1];
         last;
       }
     }
