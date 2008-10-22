@@ -49,6 +49,23 @@ sub reqParam {
 }
 
 
+# returns the MIME Type of an uploaded file, requires form name as argument,
+# can return an array if multiple file uploads have the same form name
+sub reqUploadMIME {
+  my $c = shift->{_YAWF}{Req}{c};
+  return $c->param_mime(shift);
+}
+
+
+# same as reqUploadMIME, only this one fetches filenames
+sub reqUploadFileName {
+  my $c = shift->{_YAWF}{Req}{c};
+  return $c->param_filename(shift);
+}
+
+
+# saves file contents identified by the form name to the specified file
+# (doesn't support multiple file upload using the same form name yet)
 sub reqSaveUpload {
   my($s, $n, $f) = @_;
   open my $F, '>', $f or die "Unable to write to $f: $!";
