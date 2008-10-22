@@ -10,7 +10,7 @@ use CGI::Minimal;
 
 our @EXPORT = qw|
   reqInit reqParam reqSaveUpload reqCookie
-  reqMethod reqHeader reqURI reqFullURI reqIP
+  reqMethod reqHeader reqURI reqFullURI reqHost reqIP
 |;
 
 
@@ -76,6 +76,11 @@ sub reqFullURI {
   return $ENV{HTTP_HOST} && defined $ENV{REQUEST_URI} ?
     $ENV{HTTP_HOST}.$ENV{REQUEST_URI}.($ENV{QUERY_STRING} ? '?'.$ENV{QUERY_STRING} : '')
     : undef;
+}
+
+
+sub reqHost {
+  return $END{HTTP_HOST};
 }
 
 
