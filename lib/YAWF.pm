@@ -200,7 +200,7 @@ package YAWF::DefaultHandlers;
 # these are defaults, you really want to replace these boring pages
 sub error_404 {
   my $s = shift;
-  $s->resBuffer(undef);
+  $s->resInit;
   $s->resStatus(404);
   very_simple_page($s, '404 - Page Not Found', 'The page you were looking for does not exist...');
 }
@@ -209,7 +209,7 @@ sub error_404 {
 # a *very* helpful error message :-)
 sub error_500 {
   my $s = shift;
-  $s->resBuffer(undef);
+  $s->resInit;
   $s->resStatus(500);
   very_simple_page($s, '500 - Internal Server Error', 'Ooooopsie~, something went wrong!');
 }

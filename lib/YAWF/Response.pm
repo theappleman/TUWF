@@ -12,6 +12,9 @@ our @EXPORT = qw|
 |;
 
 
+# Initialises response data and resets all headers and content to their
+# defaults. This method can be called mutliple times per request to clear
+# any previous changes and to create a new response.
 sub resInit {
   my $self = shift;
 
@@ -147,6 +150,9 @@ sub resFinish {
     for (0..@{$i->{headers}}/2);
   print  "\r\n";
   print  $i->{content};
+
+  # free the memory used for the reponse data
+  $self->resInit;
 }
 
 
