@@ -20,7 +20,8 @@ my @handlers;
 # The holy init() function
 sub init {
   my %o = (
-    # default error_500_handler and error_404_handler here...
+    error_500_handler => \&YAWF::DefaultHandlers::error_500,
+    error_404_handler => \&YAWF::DefaultHandlers::error_404,
     @_
   );
   die "No namespace argument specified!" if !$o{namespace};
@@ -88,6 +89,7 @@ sub log_warning {
 
 
 
+
 # The namespace which inherits all functions to be available in the global
 # object. These functions are not inherited by the main YAWF namespace.
 package YAWF::Object;
@@ -143,9 +145,6 @@ sub handle_request {
         last;
       }
     }
-
-    # a default 404 handler may be a better idea than just dying like this
-    die "Oops, no handler found..." if !$han;
     
     # execute handler
     $han->($self);
@@ -166,7 +165,11 @@ sub handle_request {
     # Call the error_500_handler
     # The handler should manually call dbCommit if it makes any changes to the DB
     eval { $self->{_YAWF}{error_500_handler}->($self); };
-    warn "Error handler died as well, something is seriously wrong with your code. ($@)" if $@;
+    if($@) {
+      chomp( my $m = $@ );
+      warn "Error handler died as well, something is seriously wrong with your code. ($m)\n";
+      YAWF::DefaultHandlers::error_500($self);
+    }
 
     # some logging here...
   }
@@ -185,6 +188,51 @@ sub handle_request {
 sub debug {
   return shift->{_YAWF}{debug};
 }
+
+
+
+
+# put the default handlers in a separate namespace
+# (in case we do decide to use the HTML generator here)
+package YAWF::DefaultHandlers;
+
+
+# these are defaults, you really want to replace these boring pages
+sub error_404 {
+  my $s = shift;
+  $s->resStatus(404);
+  very_simple_page($s, '404 - Page Not Found', 'The page you were looking for does not exist...');
+}
+
+
+# a *very* helpful error message :-)
+sub error_500 {
+  my $s = shift;
+  $s->resStatus(500);
+  very_simple_page($s, '500 - Internal Server Error', 'Ooooopsie~, something went wrong!');
+}
+
+
+# and an equally beautiful page
+sub very_simple_page {
+  my($s, $title, $msg) = @_;
+  my $fd = $s->resFd;
+  print $fd <<__;
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+ <title>$title</title>
+</head>
+<body>
+ <h1>$title</h1>
+ <p>$msg</p>
+</body>
+</html>
+__
+}
+
 
 
 1;
