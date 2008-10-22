@@ -140,7 +140,7 @@ sub handle_request {
     study $loc;
     my $han = $self->{_YAWF}{error_404_handler};
     for (@handlers ? 0..$#handlers/2 : ()) {
-      if($loc =~ /$handlers[$_*2]/) {
+      if($loc =~ /^$handlers[$_*2]$/) {
         $han = $handlers[$_*2+1];
         last;
       }
