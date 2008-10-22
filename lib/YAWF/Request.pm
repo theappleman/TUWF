@@ -10,7 +10,7 @@ use CGI::Minimal;
 
 our @EXPORT = qw|
   reqInit reqParam reqSaveUpload reqCookie
-  reqMethod reqHeader reqURI reqFullURI reqHost reqIP
+  reqMethod reqHeader reqPath reqURI reqHost reqIP
 |;
 
 
@@ -71,14 +71,15 @@ sub reqHeader {
 }
 
 
-sub reqURI {
+# returns the path part of the current URI, excluding the leading slash
+sub reqPath {
   (my $u = $ENV{REQUEST_URI}) =~ s{^/+}{};
   return $u;
 }
 
 
 # returns undef if the request isn't initialized yet
-sub reqFullURI {
+sub reqURI {
   return $ENV{HTTP_HOST} && defined $ENV{REQUEST_URI} ?
     $ENV{HTTP_HOST}.$ENV{REQUEST_URI}.($ENV{QUERY_STRING} ? '?'.$ENV{QUERY_STRING} : '')
     : undef;

@@ -78,7 +78,7 @@ sub log_warning {
     seek $F, 0, 2;
     while(local $_ = shift) {
       chomp;
-      printf $F "[%s] %s: %s\n", scalar localtime(), $OBJ->reqFullURI||'[init]', $_;
+      printf $F "[%s] %s: %s\n", scalar localtime(), $OBJ->reqURI||'[init]', $_;
     }
     flock $F, 4;
     close $F;
@@ -136,7 +136,7 @@ sub handle_request {
     $self->{_YAWF}{pre_request_handler}->($self) if $self->{_YAWF}{pre_request_handler};
 
     # find the handler
-    my $loc = $self->reqURI;
+    my $loc = $self->reqPath;
     study $loc;
     my $han = $self->{_YAWF}{error_404_handler};
     for (@handlers ? 0..$#handlers/2 : ()) {
