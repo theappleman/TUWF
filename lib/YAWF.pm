@@ -169,12 +169,12 @@ sub handle_request {
     # The handler should manually call dbCommit if it makes any changes to the DB
     eval {
       $self->resInit;
-      $self->{_YAWF}{error_500_handler}->($self);
+      $self->{_YAWF}{error_500_handler}->($self, $err);
     };
     if($@) {
       chomp( my $m = $@ );
       warn "Error handler died as well, something is seriously wrong with your code. ($m)\n";
-      YAWF::DefaultHandlers::error_500($self);
+      YAWF::DefaultHandlers::error_500($self, $err);
     }
 
     # write detailed information about this error to the log
