@@ -130,6 +130,7 @@ sub resStatus {
 sub resRedirect {
   my($self, $url, $type) = @_;
 
+  $self->resInit;
   my $fd = $self->resFd();
   print $fd 'Redirecting...';
   $self->resHeader('Location' => $self->reqHost().$url);
