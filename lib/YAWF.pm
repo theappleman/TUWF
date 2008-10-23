@@ -112,6 +112,8 @@ sub load_modules {
 sub handle_request {
   my $self = shift;
 
+  my $start = [Time::HiRes::gettimeofday()] if $self->debug;
+
   # put everything in an eval to catch any error, even
   # those caused by a YAWF core module
   eval { 
@@ -190,8 +192,18 @@ sub handle_request {
   eval { $self->resFinish; };
   warn $@ if $@;
 
+  # log debug information in the form of:
+  # >  12ms (SQL:  8ms,  2 qs) for http://beta.vndb.org/v10
   if($self->debug) {
-    # log some debug info here
+    
+    # SQL stats (don't count the ping and commit as queries)
+    my($sqlt, $sqlc) = (0, -2);
+    ++$sqlc and $sqlt += $_->[1]*1000
+      for (@{$self->{_YAWF}{DB}{queries}});
+
+    my $time = Time::HiRes::tv_interval($start)*1000;
+    $self->log(sprintf('>%4dms (SQL:%4dms,%3d qs) for %s',
+      $time, $sqlt, $sqlc, $self->reqURI), 1);
   }
 }
 
@@ -212,7 +224,7 @@ sub log {
     flock $F, 2;
     seek $F, 0, 2;
     printf $F "[%s] %s: %s\n", scalar localtime(), $self->reqURI||'[init]', $msg if !$excl;
-    print $F $msg if $excl;
+    print $F "$msg\n" if $excl;
     flock $F, 4;
     close $F;
   }
