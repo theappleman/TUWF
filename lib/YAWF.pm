@@ -146,15 +146,17 @@ sub handle_request {
     my $loc = $self->reqPath;
     study $loc;
     my $han = $self->{_YAWF}{error_404_handler};
+    my @args;
     for (@handlers ? 0..$#handlers/2 : ()) {
       if($loc =~ /^$handlers[$_*2]$/) {
+        @args = map { substr $loc, $-[$_], $+[$_]-$-[$_] } 1..$#- if $#-;
         $han = $handlers[$_*2+1];
         last;
       }
     }
     
     # execute handler
-    my $ret = $han->($self);
+    my $ret = $han->($self, @args);
 
     # give 404 page if the handler returned 404...
     if($ret && $ret eq '404') {

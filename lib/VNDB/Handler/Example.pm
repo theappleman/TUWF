@@ -3,13 +3,14 @@ package VNDB::Handler::Example;
 
 use strict;
 use warnings;
-use YAWF ':html';
+use YAWF ':html', ':xml';
 
 
 YAWF::register(
   qr/envdump/,   \&envdump,
   qr/error/,     \&error,
   qr/html/,      \&htmlexample,
+  qr{v([1-9]\d*)/xml},  \&vnxml,
 );
 
 
@@ -57,5 +58,30 @@ sub htmlexample {
 }
 
 
+# this function will get a number as argument, this number was parsed
+# from the pattern match above (/v+/xml, we get the + here as argument)
+sub vnxml {
+  my($self, $id) = @_;
+
+  # Let's actually serve XML as text/xml
+  $self->resHeader('Content-Type' => 'text/xml');
+
+  # fetch some information about that VN,
+  # defined in VNDB::DB::Misc
+  my $v = $self->dbVNInfo($id);
+
+  # no results found, return a 404
+  return 404 if !$v->{id};
+
+  # XML output
+  xml;
+  tag 'vn', id => $id;
+   tag 'title', $v->{title};
+   tag 'original', $v->{original};
+  end;
+}
+
+
 1;
+
 
