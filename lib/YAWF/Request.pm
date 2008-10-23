@@ -117,7 +117,7 @@ sub reqPath {
 # returns undef if the request isn't initialized yet
 sub reqURI {
   return $ENV{HTTP_HOST} && defined $ENV{REQUEST_URI} ?
-    $ENV{HTTP_HOST}.$ENV{REQUEST_URI}.($ENV{QUERY_STRING} ? '?'.$ENV{QUERY_STRING} : '')
+    ($ENV{HTTPS} ? 'https://' : 'http://').$ENV{HTTP_HOST}.$ENV{REQUEST_URI}.($ENV{QUERY_STRING} ? '?'.$ENV{QUERY_STRING} : '')
     : undef;
 }
 
