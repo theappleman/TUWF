@@ -17,6 +17,13 @@ our $OBJ;
 my @handlers;
 
 
+# 'redirect' this import to YAWF::XML
+sub import {
+  require YAWF::XML;
+  YAWF::XML->import(@_);
+}
+
+
 # The holy init() function
 sub init {
   my %o = (

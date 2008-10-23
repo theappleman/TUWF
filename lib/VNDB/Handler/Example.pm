@@ -3,12 +3,13 @@ package VNDB::Handler::Example;
 
 use strict;
 use warnings;
-use YAWF;
+use YAWF ':html';
 
 
 YAWF::register(
-  qr/envdump/,  \&envdump,
-  qr/error/,    \&error,
+  qr/envdump/,   \&envdump,
+  qr/error/,     \&error,
+  qr/html/,      \&htmlexample,
 );
 
 
@@ -40,6 +41,19 @@ sub error {
   # report to the log file
   warn "A random warning message before the error actually occurs";
   die "Some descriptive error message here";
+}
+
+
+sub htmlexample {
+  html;
+   head;
+    title 'HTML Output Example';
+   end;
+   body;
+    h1 'HTML Output Example';
+    p 'This is a way to output HTML...';
+   end;
+  end;
 }
 
 
