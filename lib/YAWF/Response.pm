@@ -58,7 +58,7 @@ sub resHeader {
 
   my @h;
   my @r;
-  for (@$h ? 0..@$h/2 : ()) {
+  for (@$h ? 0..$#$h/2 : ()) {
     if(lc($h->[$_*2]) eq lc($name)) {
       push @h, $h->[$_*2+1];
       if(@_ == 3 && defined $value) {
@@ -148,7 +148,7 @@ sub resFinish {
 
   printf "Status: %d\r\n", $i->{status};
   printf "%s: %s\r\n", $i->{headers}[$_*2], $i->{headers}[$_*2+1]
-    for (0..@{$i->{headers}}/2);
+    for (0..$#{$i->{headers}}/2);
   print  "\r\n";
   print  $i->{content};
 
