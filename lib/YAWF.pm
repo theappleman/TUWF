@@ -41,7 +41,7 @@ sub init {
   }, 'YAWF::Object';
 
   # install a warning handler to write to the log file
-  $SIG{__WARN__} = \&log_warning;
+  $SIG{__WARN__} = sub { $YAWF::OBJ->log($_) for @_; };
 
   # load optional modules
   require Time::HiRes if $OBJ->debug;
@@ -77,22 +77,6 @@ sub register {
   push @handlers, @_;
 }
 
-
-# Writes warning messages to the log file (if there is a log file)
-sub log_warning {
-  if($YAWF::OBJ->{_YAWF}{logfile} && open my $F, '>>:utf8', $YAWF::OBJ->{_YAWF}{logfile}) {
-    flock $F, 2;
-    seek $F, 0, 2;
-    while(local $_ = shift) {
-      chomp;
-      printf $F "[%s] %s: %s\n", scalar localtime(), $OBJ->reqURI||'[init]', $_;
-    }
-    flock $F, 4;
-    close $F;
-  } else {
-    warn @_;
-  }
-}
 
 
 
@@ -192,19 +176,14 @@ sub handle_request {
     }
 
     # write detailed information about this error to the log
-    if($self->{_YAWF}{logfile} && open my $F, '>>:utf8', $self->{_YAWF}{logfile}) {
-      flock $F, 2;
-      seek $F, 0, 2;
-      printf $F "[%s] %s: FATAL ERROR!\n", scalar localtime(), $self->reqURI||'[init]';
-      print  $F "HTTP Request Headers:\n";
-      printf $F "  %s: %s\n", $_, $self->reqHeader($_) for ($self->reqHeader);
-      print  $F "Param dump:\n";
-      printf $F "  %s: %s\n", $_, $self->reqParam($_) for ($self->reqParam);
-      print  $F "Error:\n";
-      printf $F "  %s\n", $err;
-      flock $F, 4;
-      close $F;
-    }
+    $self->log(
+      "FATAL ERROR!\n".
+      "HTTP Request Headers:\n".
+      join('', map sprintf("  %s: %s\n", $_, $self->reqHeader($_)), $self->reqHeader).
+      "Param dump:\n".
+      join('', map sprintf("  %s: %s\n", $_, $self->reqParam($_)), $self->reqParam).
+      "Error:\n  $err\n"
+    );
   }
 
   # finalize response (flush output, etc)
@@ -222,6 +201,22 @@ sub debug {
   return shift->{_YAWF}{debug};
 }
 
+
+# writes a message to the log file. date, time and URL are automatically added
+# An optional 3rd argument can be passed to exclude the date, time and url information
+sub log {
+  my($self, $msg, $excl) = @_;
+  chomp $msg;
+  $msg =~ s/\n/\n  | /g;
+  if($self->{_YAWF}{logfile} && open my $F, '>>:utf8', $self->{_YAWF}{logfile}) {
+    flock $F, 2;
+    seek $F, 0, 2;
+    printf $F "[%s] %s: %s\n", scalar localtime(), $self->reqURI||'[init]', $msg if !$excl;
+    print $F $msg if $excl;
+    flock $F, 4;
+    close $F;
+  }
+}
 
 
 
