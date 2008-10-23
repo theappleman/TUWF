@@ -27,6 +27,8 @@ sub import {
 # The holy init() function
 sub init {
   my %o = (
+    mail_from => '<noreply-yawf@blicky.net>',
+    mail_sendmail => '/usr/sbin/sendmail',
     error_500_handler => \&YAWF::DefaultHandlers::error_500,
     error_404_handler => \&YAWF::DefaultHandlers::error_404,
     @_
@@ -87,6 +89,7 @@ package YAWF::Object;
 
 use YAWF::Response;
 use YAWF::Request;
+use YAWF::Misc;
 use YAWF::DB;
 
 
