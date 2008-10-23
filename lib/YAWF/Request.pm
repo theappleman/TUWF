@@ -18,7 +18,7 @@ sub reqInit {
   my $self = shift;
 
   # lighttpd doesn't always split the query string from REQUEST_URI
-  if($ENV{SERVER_SOFTWARE} =~ /lighttpd/) {
+  if($ENV{SERVER_SOFTWARE}||'' =~ /lighttpd/) {
     ($ENV{REQUEST_URI}, $ENV{QUERY_STRING}) = split /\?/, $ENV{REQUEST_URI}, 2
       if ($ENV{REQUEST_URI}||'') =~ /\?/;
   }
