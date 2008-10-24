@@ -19,7 +19,7 @@ use warnings;
 use Exporter;
 
 
-our(@htmltags, @htmlexport, @xmlexport);
+our(@htmltags, @htmlexport, @xmlexport, @htmlbool);
 
 
 BEGIN {
@@ -32,6 +32,9 @@ BEGIN {
     legend li Link meta optgroup option param script style title
   |;
 
+  # boolean (self-closing) tags
+  @htmlbool = qw| hr br img input area base frame link param |;
+
   # functions to export
   @htmlexport = (@htmltags, qw| html lit txt tag end |);
   @xmlexport = qw| xml lit txt tag end |;
@@ -39,7 +42,7 @@ BEGIN {
   # create the subroutines to map to the html tags
   no strict 'refs';
   for my $e (@htmltags) {
-    *{__PACKAGE__."::$e"} = sub { tag($e, @_) }
+    *{__PACKAGE__."::$e"} = sub { _tag(1, $e, @_) }
   }
 };
 
@@ -98,11 +101,15 @@ sub txt {
 #  'tagname', id => 'main', '<bar>'    <tagname id="main">&lt;bar&gt;</tagname>
 #  'tagname', id => 'main', undef      <tagname id="main" />
 #  'tagname', undef                    <tagname />
-sub tag {
-  (my $name = shift) =~ y/A-Z/a-z/;
+sub _tag {
+  my $indirect = shift; # called as tag() or as generated html function?
+  my $name = shift;
+  $name  =~ y/A-Z/a-z/ if $indirect;
 
   my $t = '<'.$name;
   $t .= ' '.(shift).'="'.escape(shift).'"' while @_ > 1;
+
+  push @_, undef if $indirect && !@_ && grep $name eq $_, @htmlbool;
 
   if(!@_) {
     $t .= '>';
@@ -113,6 +120,9 @@ sub tag {
   } else {
     lit $t.'>'.escape(shift).'</'.$name.'>';
   } 
+}
+sub tag {
+  _tag 0, @_;
 }
 
 

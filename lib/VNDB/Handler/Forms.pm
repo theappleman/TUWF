@@ -41,10 +41,10 @@ qr/formtest/, sub {
      for (1..4) {
        label for => 'string'.$_, '#'.$_;
        input type => 'text', id => 'string'.$_, name => 'string'.$_,
-         value => $frm->{"string$_"}, size => 50, undef;
-       br undef;
+         value => $frm->{"string$_"}, size => 50;
+       br;
      }
-     input type => 'submit', value => 'Submit!', undef;
+     input type => 'submit', value => 'Submit!';
     end;
     end;
     h2 '@rules = ';
