@@ -37,6 +37,11 @@ our %templates = (
 #    func       => [ sub { external subroutine }, "message for the user" ]
 #  }
 #
+# The subroutine passed with the func rule will receive a form value as it's
+# first argument and must return either any false value if the field doesn't
+# validate or any true value otherwise. The function is allowed to modify it's
+# first argument to change the value of the field.
+#
 # Returns a hash with form names as keys and their value as argument, and
 # a special key called '_err' in case there were errors. The value of this
 # hash item is an array of failed test cases, each represented as an array
@@ -54,6 +59,7 @@ sub formValidate {
   my %ret;
 
   for my $f (@fields) {
+    $f->{required}++ if not exists $f->{required};
     my @values = $f->{multi} ? $self->reqParam($f->{name}) : ( scalar $self->reqParam($f->{name}) );
     $values[0] = '' if !@values;
     for (@values) {

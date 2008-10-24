@@ -17,10 +17,12 @@ qr/formtest/, sub {
   my $self = shift;
 
   my @rules;
-  my $rules = qq{  (
+  my $rules = q{  (
     { name => 'string1', required => 1, maxlength => 20, minlength => 10, enum => [qw|50 hundred only-valid-value|] },
     { name => 'string2', required => 0, regex => [ qr/default/, 'fail message' ], default => 'this is a default (and matches)' },
-    { name => 'string3', required => 1, func => [ sub { length shift > 5 }, 'another fail message' ] },
+    { name => 'string3', required => 1, func => [ sub {
+        if(length $_[0] > 5) { $_[0] = uc($_[0]); return $_[0] } else { return undef }
+      }, 'another fail message' ] },
     { name => 'string4', required => 1, template => 'int' },
   )};
   eval '@rules = '.$rules;
