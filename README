@@ -1,0 +1,42 @@
+YAWF - Yet Another Website Framework [or] Yorhel's Awesome Website Framework
+
+
+  This package provides the following set of modules:
+
+    YAWF
+    YAWF::DB
+    YAWF::XML
+    YAWF::Misc
+    YAWF::Request
+    YAWF::Response
+
+
+  Dependencies:
+
+    Required
+      DBI
+      CGI::Minimal
+      CGI::Cookie::XS
+
+    Optional
+      FCGI             to run in a FastCGI environment
+      Time::HiRes      with debugging enabled
+      PerlIO::gzip     output compression
+
+
+  Notes on usage
+
+    The documentation is still quite lacking, see README.concept for a general
+    overview, check examples/ for some examples, and read the source code for
+    more information.
+
+    The API of this module is in flux, and I am not one to care much about
+    backwards compatibility. If you decide to use YAWF, either get one version
+    and stick to that, or be sure to read all commit messages if you want to
+    stay up-to-date.
+
+
+  Contact
+
+    #vndb @ irc.synirc.net
+
