@@ -100,7 +100,7 @@ sub sqlhelper { # type, query, @list
 
   push(@{$self->{_YAWF}{DB}{queries}}, [ \@q, Time::HiRes::tv_interval($start) ]) if $self->debug;
 
-  $r = 0  if $type == 0 && !$r;
+  $r = 0  if $type == 0 && (!$r || $r == 0);
   $r = {} if $type == 1 && (!$r || ref($r) ne 'HASH');
   $r = [] if $type == 2 && (!$r || ref($r) ne 'ARRAY');
 
