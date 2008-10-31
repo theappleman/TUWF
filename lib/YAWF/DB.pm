@@ -106,6 +106,7 @@ sub sqlhelper { # type, query, @list
   $sqlq =~ s/\r?\n/ /g;
   $sqlq =~ s/  +/ /g;
   my(@q) = @_ ? sqlprint(0, $sqlq, @_) : ($sqlq);
+  $self->log($q[0].' | "'.join('", "', @q[1..$#q]).'"') if $self->{_YAWF}{log_queries};
 
   my $q = $s->prepare($q[0]);
   $q->execute($#q ? @q[1..$#q] : ());
