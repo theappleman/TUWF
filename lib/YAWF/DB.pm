@@ -8,7 +8,7 @@ use DBI;
 use Exporter 'import';
 our @EXPORT = qw|
   dbInit dbCheck dbDisconnect dbCommit dbRollBack
-  dbExec dbRow dbAll
+  dbExec dbRow dbAll dbPage
 |;
 
 
@@ -76,6 +76,22 @@ sub dbRow {
 # ..return all rows as an arrayref of hashrefs
 sub dbAll {
   return sqlhelper(shift, 2, @_);
+}
+
+
+# same as dbAll, but paginates results by adding
+# an OFFSET and LIMIT to the query, the first argument
+# should be a hashref with the keys page and results.
+# Returns the usual value from dbAll and a value
+# indicating whether there is a next page
+sub dbPage {
+  my($s, $o, $q, @a) = @_;
+  $q .= ' LIMIT ? OFFSET ?';
+  push @a, $o->{results}+1, $o->{results}*($o->{page}-1);
+  my $r = $s->dbAll($q, @a);
+  return ($r, 0) if $#$r != $o->{results};
+  pop @$r;
+  return ($r, 1);
 }
 
 
