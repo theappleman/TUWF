@@ -133,7 +133,7 @@ sub resRedirect {
   $self->resInit;
   my $fd = $self->resFd();
   print $fd 'Redirecting...';
-  $self->resHeader('Location' => $self->reqHost().$url);
+  $self->resHeader('Location' => $self->reqBaseURI().$url);
   $self->resStatus(!$type ? 301 : $type eq 'temp' ? 307 : 307);
 }
 

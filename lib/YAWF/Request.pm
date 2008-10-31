@@ -10,7 +10,7 @@ use CGI::Minimal;
 
 our @EXPORT = qw|
   reqInit reqParam reqSaveUpload reqCookie
-  reqMethod reqHeader reqPath reqURI reqHost reqIP
+  reqMethod reqHeader reqPath reqBaseURI reqURI reqHost reqIP
 |;
 
 
@@ -111,6 +111,12 @@ sub reqHeader {
 sub reqPath {
   (my $u = $ENV{REQUEST_URI}) =~ s{^/+}{};
   return $u;
+}
+
+
+# returns base URI, excluding trailing slash
+sub reqBaseURI {
+  return ($ENV{HTTPS} ? 'https://' : 'http://').$ENV{HTTP_HOST};
 }
 
 
