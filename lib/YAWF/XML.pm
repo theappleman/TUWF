@@ -69,7 +69,7 @@ sub import {
 
 
 # HTML escape, also does \n to <br /> conversion
-sub escape(_) {
+sub escape {
   local $_ = shift;
   return '' if !$_ && $_ ne '0';
   s/&/&amp;/g;
