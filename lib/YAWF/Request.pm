@@ -5,7 +5,6 @@ use strict;
 use warnings;
 use Encode 'decode_utf8';
 use Exporter 'import';
-use CGI::Cookie::XS;
 use CGI::Minimal;
 
 our @EXPORT = qw|
@@ -75,6 +74,7 @@ sub reqSaveUpload {
 
 
 sub reqCookie {
+  require CGI::Cookie::XS;
   my $c = CGI::Cookie::XS->fetch;
   return $c && ref($c) eq 'HASH' && $c->{$_[1]} ? decode_utf8 $c->{$_[1]}[0] : '';
 }

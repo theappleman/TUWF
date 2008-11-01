@@ -16,12 +16,12 @@ YAWF - Yet Another Website Framework [or] Yorhel's Awesome Website Framework
     Required
       DBI
       CGI::Minimal
-      CGI::Cookie::XS
 
     Optional
       FCGI             to run in a FastCGI environment
       Time::HiRes      with debugging enabled
       PerlIO::gzip     output compression
+      CGI::Cookie::XS  to parse HTTP cookies
 
 
   Notes on usage
