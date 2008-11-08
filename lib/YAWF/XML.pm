@@ -106,7 +106,8 @@ sub _tag {
   my $name = shift;
   $name  =~ y/A-Z/a-z/ if $indirect;
 
-  my $t = '<'.$name;
+  my $t = $YAWF::OBJ->{_YAWF}{xml_pretty} ? "\n".(' 'x(@lasttags*$YAWF::OBJ->{_YAWF}{xml_pretty})) : '';
+  $t .= '<'.$name;
   $t .= ' '.(shift).'="'.escape(shift).'"' while @_ > 1;
 
   push @_, undef if $indirect && !@_ && grep $name eq $_, @htmlbool;
@@ -129,6 +130,7 @@ sub tag {
 # Ends the last opened tag
 sub end() {
   my $l=pop @lasttags;
+  lit "\n".(' 'x(@lasttags*$YAWF::OBJ->{_YAWF}{xml_pretty})) if $YAWF::OBJ->{_YAWF}{xml_pretty};
   lit '</'.$l.'>';
 }
 
