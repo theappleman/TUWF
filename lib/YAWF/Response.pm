@@ -27,7 +27,7 @@ sub resInit {
     content => '',
   };
 
-  open $self->{_YAWF}{Res}{fd}, '>:utf8', \$self->{_YAWF}{Res}{content};
+  open $self->{_YAWF}{Res}{fd}, '>', \$self->{_YAWF}{Res}{content};
 
   # enable output compression by default if the PerlIO::gzip module is available
   # (we don't check for browser support or even content, but it's possible to
@@ -37,7 +37,7 @@ sub resInit {
     binmode $self->{_YAWF}{Res}{fd}, ':gzip';
     $self->resHeader('Content-Encoding' => 'gzip');
   }
-
+  binmode $self->{_YAWF}{Res}{fd}, ':utf8';
 }
 
 
@@ -95,7 +95,7 @@ sub resBuffer {
     # clear buffer
     close $i->{fd};
     $i->{content} = '';
-    open $i->{fd}, '>:utf8', \$i->{content};
+    open $i->{fd}, '>', \$i->{content};
 
     if(!defined $_[0] && $h || $_[0]) {
       binmode $i->{fd}, ':gzip';
@@ -103,6 +103,7 @@ sub resBuffer {
     } else {
       $self->resHeader('Content-Encoding', undef);
     }
+    binmode $i->{fd}, ':utf8';
   }
 
   $h = $self->resHeader('Content-Encoding');
