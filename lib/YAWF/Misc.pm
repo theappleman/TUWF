@@ -29,6 +29,8 @@ our %templates = (
 #    multi      => 0/1, multiple form fields with the same name (see below)
 #    default    => value to return if the field is left empty
 #    required   => 0/1, whether this field is required, defaults to 1
+#    whitespace => 0/1, removes any whitespace around the field before
+#                  validating, also removes all occurences of \r. defaults to 1
 #    maxlength  => maximum length of the field
 #    minlength  => minimum required length
 #    enum       => [ value must be present in a set list ]
@@ -60,6 +62,7 @@ sub formValidate {
 
   for my $f (@fields) {
     $f->{required}++ if not exists $f->{required};
+    $f->{whitespace}++ if not exists $f->{whitespace};
     my @values = $f->{multi} ? $self->reqParam($f->{name}) : ( scalar $self->reqParam($f->{name}) );
     $values[0] = '' if !@values;
     for (@values) {
@@ -84,6 +87,13 @@ sub formValidate {
 # otherwise
 sub _validate { # value, { rules }
   my($v, $r) = @_;
+
+  # remove whitespace
+  if($v && $r->{whitespace}) {
+    $v =~ s/\r//g;
+    $v =~ s/^[\s\n]+//;
+    $v =~ s/[\s\n]+$//;
+  }
 
   # empty
   if(!$v && length $v < 1 && $v ne '0') {
