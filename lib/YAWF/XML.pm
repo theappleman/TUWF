@@ -10,9 +10,6 @@ package YAWF::XML;
 #  use YAWF ':xml';
 # instead.
 
-# Also, this module doesn't do any 'pretty printing', all XML/HTML tags are
-# simply outputted without any returns or indentation.
-
 
 use strict;
 use warnings;
@@ -58,18 +55,20 @@ sub import {
   # this is the reason you can't use this module directly
   my $pkg = caller(1);
 
-  my $xml = grep /^:xml$/, @_;
-  my $html = grep /^:html$/, @_;
+  my @exp;
+  push @exp, @xmlexport if grep /^:xml$/, @_;
+  push @exp, @htmlexport if grep /^:html$/, @_;
+  push @exp, 'xml_escape' if grep /^xml_escape$/, @_;
 
   # ugly way to manually export functions...
   no warnings 'once';
   no strict 'refs';
-  *{"${pkg}::$_"} = *{"${type}::$_"} for ($xml ? @xmlexport : (), $html ? @htmlexport : ());
+  *{"${pkg}::$_"} = *{"${type}::$_"} for (@exp);
 }
 
 
 # HTML escape, also does \n to <br /> conversion
-sub escape {
+sub xml_escape {
   local $_ = shift;
   return '' if !$_ && $_ ne '0';
   s/&/&amp;/g;
@@ -89,7 +88,7 @@ sub lit {
 
 # output text (HTML escaped)
 sub txt {
-  lit escape $_ for @_;
+  lit xml_escape $_ for @_;
 }
 
 
@@ -108,7 +107,7 @@ sub _tag {
 
   my $t = $YAWF::OBJ->{_YAWF}{xml_pretty} ? "\n".(' 'x(@lasttags*$YAWF::OBJ->{_YAWF}{xml_pretty})) : '';
   $t .= '<'.$name;
-  $t .= ' '.(shift).'="'.escape(shift).'"' while @_ > 1;
+  $t .= ' '.(shift).'="'.xml_escape(shift).'"' while @_ > 1;
 
   push @_, undef if $indirect && !@_ && grep $name eq $_, @htmlbool;
 
@@ -119,7 +118,7 @@ sub _tag {
   } elsif(!defined $_[0]) {
     lit $t.' />';
   } else {
-    lit $t.'>'.escape(shift).'</'.$name.'>';
+    lit $t.'>'.xml_escape(shift).'</'.$name.'>';
   } 
 }
 sub tag {
