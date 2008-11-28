@@ -8,7 +8,7 @@ use Exporter 'import';
 use CGI::Minimal;
 
 our @EXPORT = qw|
-  reqInit reqParam reqSaveUpload reqCookie
+  reqInit reqParam reqUploadMIME reqUploadFileName reqSaveUpload reqCookie
   reqMethod reqHeader reqPath reqBaseURI reqURI reqHost reqIP
 |;
 
