@@ -19,7 +19,7 @@ our %templates = (
   url        => qr/^(http|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?$/,
   asciiprint => qr/^[\x20-\x7E]*$/,
   int        => qr/^-?\d+$/,
-  pname      => qr/^[a-z][a-z0-9-]*$/,
+  pname      => qr/^[a-z0-9-]*$/,
 );
 
 
