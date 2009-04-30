@@ -34,7 +34,6 @@ sub init {
     @_
   );
   die "No namespace argument specified!" if !$o{namespace};
-  die "db_login argument required!" if !$o{db_login};
 
   # create object
   $OBJ = bless {
@@ -52,7 +51,7 @@ sub init {
   $OBJ->load_modules;
 
   # initialize DB connection
-  $OBJ->dbInit;
+  $OBJ->dbInit if $o{db_login};
 
   # plain old CGI
   if($ENV{GATEWAY_INTERFACE} && $ENV{GATEWAY_INTERFACE} =~ /CGI/i) {
@@ -70,7 +69,7 @@ sub init {
   }
 
   # close the DB connection
-  $OBJ->dbDisconnect;
+  $OBJ->dbDisconnect if $o{db_login};
 }
 
 
@@ -90,12 +89,15 @@ package YAWF::Object;
 use YAWF::Response;
 use YAWF::Request;
 use YAWF::Misc;
-use YAWF::DB;
 
 
 # This function will load all site modules and import the exported functions
 sub load_modules {
   my $s = shift;
+  if($s->{_YAWF}{db_login}) {
+    require YAWF::DB;
+    import YAWF::DB;
+  }
   (my $f = $s->{_YAWF}{namespace}) =~ s/::/\//g;
   for my $p (@INC) {
     for (glob $p.'/'.$f.'/{DB,Util,Handler}/*.pm') {
@@ -126,7 +128,7 @@ sub handle_request {
     $self->resInit();
     
     # make sure our DB connection is still there and start a new transaction
-    $self->dbCheck();
+    $self->dbCheck() if $self->{_YAWF}{db_login};
 
     # call pre request handler, if any
     $self->{_YAWF}{pre_request_handler}->($self) if $self->{_YAWF}{pre_request_handler};
@@ -157,7 +159,7 @@ sub handle_request {
     $self->{_YAWF}{post_request_handler}->($self) if $self->{_YAWF}{post_request_handler};
 
     # commit changes
-    $self->dbCommit;
+    $self->dbCommit if $self->{_YAWF}{db_login};
   };
 
   # error handling
@@ -165,8 +167,10 @@ sub handle_request {
     chomp( my $err = $@ );
 
     # act as if the changes to the DB never happened
-    eval { $self->dbRollBack; };
-    warn $@ if $@;
+    if($self->{_YAWF}{db_login}) {
+      eval { $self->dbRollBack; };
+      warn $@ if $@;
+    }
 
     # Call the error_500_handler
     # The handler should manually call dbCommit if it makes any changes to the DB
@@ -201,8 +205,10 @@ sub handle_request {
     
     # SQL stats (don't count the ping and commit as queries)
     my($sqlt, $sqlc) = (0, -2);
-    ++$sqlc and $sqlt += $_->[1]*1000
-      for (@{$self->{_YAWF}{DB}{queries}});
+    if($self->{_YAWF}{db_login}) {
+      ++$sqlc and $sqlt += $_->[1]*1000
+        for (@{$self->{_YAWF}{DB}{queries}});
+    }
 
     my $time = Time::HiRes::tv_interval($start)*1000;
     $self->log(sprintf('>%4dms (SQL:%4dms,%3d qs) for %s',

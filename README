@@ -14,10 +14,10 @@ YAWF - Yet Another Website Framework [or] Yorhel's Awesome Website Framework
   Dependencies:
 
     Required
-      DBI
       CGI::Minimal
 
     Optional
+      DBI              for SQL functionality (YAWF::DB)
       FCGI             to run in a FastCGI environment
       Time::HiRes      with debugging enabled
       PerlIO::gzip     output compression
