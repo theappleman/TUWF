@@ -140,7 +140,7 @@ sub handle_request {
     my @args;
     for (@handlers ? 0..$#handlers/2 : ()) {
       if($loc =~ /^$handlers[$_*2]$/) {
-        @args = map { substr $loc, $-[$_], $+[$_]-$-[$_] } 1..$#- if $#-;
+        @args = map defined $-[$_] ? substr $loc, $-[$_], $+[$_]-$-[$_] : undef, 1..$#- if $#-;
         $han = $handlers[$_*2+1];
         last;
       }
