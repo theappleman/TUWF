@@ -27,17 +27,11 @@ sub resInit {
     content => '',
   };
 
-  open $self->{_YAWF}{Res}{fd}, '>', \$self->{_YAWF}{Res}{content};
-
-  # enable output compression by default if the PerlIO::gzip module is available
-  # (we don't check for browser support or even content, but it's possible to
-  #  disable the gzip compression layer later on via resBuffer)
+  # try to load PerlIO::gzip, resBuffer will check for its availability
   eval { require PerlIO::gzip; };
-  if(!$@) {
-    binmode $self->{_YAWF}{Res}{fd}, ':gzip';
-    $self->resHeader('Content-Encoding' => 'gzip');
-  }
-  binmode $self->{_YAWF}{Res}{fd}, ':utf8';
+
+  # open output buffer
+  $self->resBuffer($self->{_YAWF}{content_encoding}||'auto');
 }
 
 
@@ -79,35 +73,50 @@ sub resHeader {
 }
 
 
-# Argument    Action
-#  none        Returns whether gzip compression is enabled or not
-#  undef       Clears the internal buffer
-#  0           Clears buffer and disables gzip
-#  1           Clears and enables gzip
+# Argument     Action
+#  none/empty   Returns output compression type: none/gzip/deflate
+#  'clear'      Clears the internal buffer, but doesn't change compression method
+#  'none'       Clears buffer and disables output compression
+#  'gzip'       Clears and enables gzip
+#  'deflate'    Clears and enables deflate
+#  'auto'       Clears and autodetects output compression from request header
 # Enabling compression if PerlIO::gzip isn't installed will result in an error
 sub resBuffer {
   my $self = shift;
+  my $act = shift;
   my $i = $self->{_YAWF}{Res};
-  my $h = $self->resHeader('Content-Encoding');
-  $h = $h && $h eq 'gzip';
 
-  if(@_) {
+  my $h = $self->resHeader('Content-Encoding');
+  $h = !$h ? 'none' : $h eq 'gzip' ? 'gzip' : $h eq 'deflate' ? 'deflate' : 'none';
+
+  if($act) {
+    my $new = $act eq 'clear' ? $h : $act;
+    if($new eq 'auto') {
+      # can we even do output compression?
+      if(!defined $PerlIO::gzip::VERSION) {
+        $new = 'none';
+      }
+      # seems like we can, figure out which encoding to use
+      else {
+        my $enc = $self->reqHeader('Accept-Encoding')||'';
+        my $gzip = $enc !~ /gzip\s*(?:;\s*q=(\d+(?:\.\d*)?))?/ ? 0 : defined $1 ? $1 : 1;
+        my $deflate = $enc !~ /deflate\s*(?:;\s*q=(\d+(?:\.\d*)?))?/ ? 0 : defined $1 ? $1 : 1;
+        $new = !$gzip && !$deflate ? 'none' : $deflate > $gzip ? 'deflate' : 'gzip';
+      }
+    }
+
     # clear buffer
-    close $i->{fd};
+    close $i->{fd} if defined $i->{fd};
     $i->{content} = '';
     open $i->{fd}, '>', \$i->{content};
 
-    if(!defined $_[0] && $h || $_[0]) {
-      binmode $i->{fd}, ':gzip';
-      $self->resHeader('Content-Encoding', 'gzip');
-    } else {
-      $self->resHeader('Content-Encoding', undef);
-    }
+    # set output compression
+    binmode $i->{fd}, $new eq 'gzip' ? ':gzip' : ':gzip(none)' if $new ne 'none';
     binmode $i->{fd}, ':utf8';
+    $self->resHeader('Content-Encoding', $new eq 'none' ? undef : $new);
   }
 
-  $h = $self->resHeader('Content-Encoding');
-  return $h && $h eq 'gzip';
+  return $h;
 }
 
 
