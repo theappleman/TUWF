@@ -36,6 +36,17 @@ YAWF - Yet Another Website Framework [or] Yorhel's Awesome Website Framework
     stay up-to-date.
 
 
+  TODO
+
+    * More liberal/better configurable code layouting
+      (not limited to the [sitename]/(Handler|Util|DB)/*.pm layout)
+    * Documentation!
+    * Ports and testing for more enviroments
+    * Better examples
+    * Test suite
+    * Proper perl module packaging (Module::Build)
+
+
   Contact
 
     #vndb @ irc.synirc.net
