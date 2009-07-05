@@ -16,8 +16,10 @@ sub dbInit {
   my $self = shift;
   $self->{_YAWF}{DB} = {
     sql => DBI->connect(@{$self->{_YAWF}{db_login}}, {
-      PrintError => 0, RaiseError => 1,
-      AutoCommit => 0, pg_enable_utf8 => 1,  
+      PrintError => 0, RaiseError => 1, AutoCommit => 0,
+      mysql_enable_utf8 => 1, # DBD::mysql
+      pg_enable_utf8    => 1, # DBD::Pg
+      unicode           => 1, # DBD::sqlite
     }),
     queries => [],
   };
@@ -105,7 +107,7 @@ sub sqlhelper { # type, query, @list
 
   $sqlq =~ s/\r?\n/ /g;
   $sqlq =~ s/  +/ /g;
-  my(@q) = @_ ? sqlprint(0, $sqlq, @_) : ($sqlq);
+  my(@q) = @_ ? sqlprint($sqlq, @_) : ($sqlq);
   $self->log($q[0].' | "'.join('", "', @q[1..$#q]).'"') if $self->{_YAWF}{log_queries};
 
   my $q = $s->prepare($q[0]);
@@ -135,20 +137,19 @@ sub sqlhelper { # type, query, @list
 # Only the ? placeholder is supported, so no dollar sign numbers or named placeholders
 # Indeed, this also means you can't use PgSQL operators containing a question mark
 
-sub sqlprint { # start, query, bind values. Returns new query + bind values
+sub sqlprint { # query, bind values. Returns new query + bind values
   my @a;
   my $q='';
-  my $s = shift;
   for my $p (split /(\?|![lHWs])/, shift) {
     next if !defined $p;
     if($p eq '?') {
       push @a, shift;
-      $q .= '$'.(@a+$s);
+      $q .= $p;
     } elsif($p eq '!s') {
       $q .= shift;
     } elsif($p eq '!l') {
       my $l = shift;
-      $q .= join ', ', map '$'.(@a+$s+$_+1), 0..$#$l;
+      $q .= join ', ', map '?', 0..$#$l;
       push @a, @$l;
     } elsif($p eq '!H' || $p eq '!W') {
       my $h=shift;
@@ -156,7 +157,7 @@ sub sqlprint { # start, query, bind values. Returns new query + bind values
       my @r;
       while(my($k,$v) = (shift(@h), shift(@h))) {
         last if !defined $k;
-        my($n,@l) = sqlprint($#a+1, $k, ref $v eq 'ARRAY' ? @$v : $v);
+        my($n,@l) = sqlprint($k, ref $v eq 'ARRAY' ? @$v : $v);
         push @r, $n;
         push @a, @l;
       }
