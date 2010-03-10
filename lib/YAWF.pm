@@ -45,7 +45,7 @@ sub init {
   $SIG{__WARN__} = sub { $YAWF::OBJ->log($_) for @_; };
 
   # load optional modules
-  require Time::HiRes if $OBJ->debug;
+  require Time::HiRes if $OBJ->debug || $OBJ->{_YAWF}{log_slow_pages};
 
   # load the modules
   $OBJ->load_modules;
@@ -117,7 +117,7 @@ sub load_modules {
 sub handle_request {
   my $self = shift;
 
-  my $start = [Time::HiRes::gettimeofday()] if $self->debug;
+  my $start = [Time::HiRes::gettimeofday()] if $self->debug || $OBJ->{_YAWF}{log_slow_pages};
 
   # put everything in an eval to catch any error, even
   # those caused by a YAWF core module
@@ -201,8 +201,8 @@ sub handle_request {
 
   # log debug information in the form of:
   # >  12ms (SQL:  8ms,  2 qs) for http://beta.vndb.org/v10
-  if($self->debug) {
-    
+  my $time = Time::HiRes::tv_interval($start)*1000 if $self->debug || $self->{_YAWF}{log_slow_pages};
+  if($self->debug || ($self->{_YAWF}{log_slow_pages} && $self->{_YAWF}{log_slow_pages} < $time)) {
     # SQL stats (don't count the ping and commit as queries, but do count their time)
     my($sqlt, $sqlc) = (0);
     if($self->{_YAWF}{db_login}) {
@@ -211,7 +211,6 @@ sub handle_request {
         for (@{$self->{_YAWF}{DB}{queries}});
     }
 
-    my $time = Time::HiRes::tv_interval($start)*1000;
     $self->log(sprintf('>%4dms (SQL:%4dms,%3d qs) for %s',
       $time, $sqlt, $sqlc, $self->reqURI), 1);
   }

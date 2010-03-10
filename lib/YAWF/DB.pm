@@ -30,8 +30,11 @@ sub dbCheck {
   my $self = shift;
   my $info = $self->{_YAWF}{DB};
 
-  $info->{queries} = [] if $self->debug;
-  my $start = [Time::HiRes::gettimeofday()] if $self->debug;
+  my $start;
+  if($self->debug || $self->{_YAWF}{log_slow_pages}) {
+    $info->{queries} = [];
+    $start = [Time::HiRes::gettimeofday()];
+  }
 
   if(!$info->{sql}->ping) {
     warn "Ping failed, reconnecting";
@@ -40,7 +43,7 @@ sub dbCheck {
   $self->dbRollBack;
   push(@{$info->{queries}},
     [ 'ping/rollback', Time::HiRes::tv_interval($start) ])
-   if $self->{_YAWF}{debug};
+   if $self->debug || $self->{_YAWF}{log_slow_pages};
 }
 
 
@@ -51,10 +54,10 @@ sub dbDisconnect {
 
 sub dbCommit {
   my $self = shift;
-  my $start = [Time::HiRes::gettimeofday()] if $self->debug;
+  my $start = [Time::HiRes::gettimeofday()] if $self->debug || $self->{_YAWF}{log_slow_pages};
   $self->{_YAWF}{DB}{sql}->commit();
-  $self->debug && push(@{$self->{_YAWF}{DB}{queries}},
-    [ 'commit', Time::HiRes::tv_interval($start) ]);
+  push(@{$self->{_YAWF}{DB}{queries}}, [ 'commit', Time::HiRes::tv_interval($start) ])
+    if $self->debug || $self->{_YAWF}{log_slow_pages};
 }
 
 
@@ -103,7 +106,7 @@ sub sqlhelper { # type, query, @list
   my $sqlq = shift;
   my $s = $self->{_YAWF}{DB}{sql};
 
-  my $start = [Time::HiRes::gettimeofday()] if $self->debug;
+  my $start = [Time::HiRes::gettimeofday()] if $self->debug || $self->{_YAWF}{log_slow_pages};
 
   $sqlq =~ s/\r?\n/ /g;
   $sqlq =~ s/  +/ /g;
@@ -117,7 +120,7 @@ sub sqlhelper { # type, query, @list
                        $q->rows;
   $q->finish();
 
-  push(@{$self->{_YAWF}{DB}{queries}}, [ \@q, Time::HiRes::tv_interval($start) ]) if $self->debug;
+  push(@{$self->{_YAWF}{DB}{queries}}, [ \@q, Time::HiRes::tv_interval($start) ]) if $self->debug || $self->{_YAWF}{log_slow_pages};
 
   $r = 0  if $type == 0 && (!$r || $r == 0);
   $r = {} if $type == 1 && (!$r || ref($r) ne 'HASH');
