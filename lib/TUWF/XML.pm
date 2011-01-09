@@ -4,19 +4,12 @@
 package TUWF::XML;
 
 
-# don't use this module directly, it won't work!
-#  use TUWF ':html';
-# or
-#  use TUWF ':xml';
-# instead.
-
-
 use strict;
 use warnings;
-use Exporter;
+use Exporter 'import';
 
 
-our(@htmltags, @htmlexport, @xmlexport, @htmlbool);
+our(@EXPORT_OK, %EXPORT_TAGS, @htmltags, @htmlexport, @xmlexport, @htmlbool);
 
 
 BEGIN {
@@ -41,30 +34,17 @@ BEGIN {
   for my $e (@htmltags) {
     *{__PACKAGE__."::$e"} = sub { _tag(1, $e, @_) }
   }
+
+  @EXPORT_OK = (@htmlexport, @xmlexport, 'xml_escape');
+  %EXPORT_TAGS = (
+    html => \@htmlexport,
+    xml  => \@xmlexport,
+  );
 };
 
 
 # keeps track of the openend tags
 my @lasttags;
-
-
-sub import {
-  my $type = shift;
-
-  # the package that imported the package that imports this package
-  # this is the reason you can't use this module directly
-  my $pkg = caller(1);
-
-  my @exp;
-  push @exp, @xmlexport if grep /^:xml$/, @_;
-  push @exp, @htmlexport if grep /^:html$/, @_;
-  push @exp, 'xml_escape' if grep /^xml_escape$/, @_;
-
-  # ugly way to manually export functions...
-  no warnings 'once';
-  no strict 'refs';
-  *{"${pkg}::$_"} = *{"${type}::$_"} for (@exp);
-}
 
 
 # HTML escape, also does \n to <br /> conversion

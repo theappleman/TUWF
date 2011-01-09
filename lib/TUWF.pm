@@ -5,6 +5,7 @@ package TUWF;
 
 use strict;
 use warnings;
+use Carp 'croak';
 
 # Store the object in a global variable for some functions that don't get it
 # passed as an argument. This will break when:
@@ -18,8 +19,9 @@ my @handlers;
 
 # 'redirect' this import to TUWF::XML
 sub import {
-  require TUWF::XML;
-  TUWF::XML->import(@_);
+  my $self = shift;
+  my $pack = caller();
+  croak $@ if !eval "package $pack; use TUWF::XML qw|@_|; 1";
 }
 
 
