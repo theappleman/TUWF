@@ -1,0 +1,9 @@
+^.git
+^_build
+^Build$
+^blib
+~$
+\.bak$
+^MANIFEST\.SKIP$
+\.tar\.gz$
+^MYMETA.yml$

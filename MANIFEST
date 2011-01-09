@@ -1,0 +1,10 @@
+Build.PL
+COPYING
+lib/TUWF.pm
+lib/TUWF/DB.pm
+lib/TUWF/Misc.pm
+lib/TUWF/Request.pm
+lib/TUWF/Response.pm
+lib/TUWF/XML.pm
+MANIFEST			This list of files
+README
