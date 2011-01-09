@@ -1,0 +1,54 @@
+=head1 NAME
+
+TUWF - The Ultimate Website Framework
+
+=head1 DESCRIPTION
+
+TUWF is a (relatively) small framework designed for writing websites. It
+provides an abstraction layer to various environment-specific tasks and has
+common functions to easy the creation of larger websites.
+
+=head2 Introduction
+
+TUWF is quite different from other website frameworks. To get used to writing
+websites in TUWF it is important to understand what TUWF is, and more
+importantly, what it is not. The following sections explain some of the design
+principles and philosophies.
+
+=head3 TUWF is for programmers
+
+Something I've learned after a few years of developing websites is that there
+are two kinds of people involved in the programming aspect of web development:
+You have web developers and programmers. Web developers are the kind of people
+who, err, just like to get things done, and have less interest in technical
+correctness, performance, code-reuse and other such strange concepts.
+Programmers, on the other hand, have experience with writing other forms of
+software and realize the importance of maintainable code. They are thus willing
+to invest some extra time in doing things right the first time in order to write
+code that keeps being fun to maintain, even after a year of active development.
+
+TUWF - being rather unorthodox among the website frameworks - was written for
+the latter group. If you consider yourself a true C<web developer> - someone who
+wants to see results without investing too much time, you're probably better off
+using one of the more orthodox frameworks such as L<Catalyst> or
+L<CGI::Application>.
+
+=head3 XML is not for humans
+
+XML (and with that, HTML) was designed to be readable and writable by both
+machine and human. In reality it's not; writing XML is a huge pain, especially
+if you want it to be generated dynamically. This, however, doesn't change the
+fact that you really can't build a website without some form of XML. In order
+to ease the generation of XML, TUWF comes with an XML generator that combines the
+interfaces of L<XML::Writer> and L<XML::Generator> modules, enabling developers to
+write XML at ease from within several different subroutines without having to
+care about their return value.
+
+=head3 ...and more
+
+This section isn't finished yet.
+
+
+
+=cut
+

@@ -1,6 +1,7 @@
 Build.PL
 COPYING
 lib/TUWF.pm
+lib/TUWF.pod
 lib/TUWF/DB.pm
 lib/TUWF/Misc.pm
 lib/TUWF/Request.pm
