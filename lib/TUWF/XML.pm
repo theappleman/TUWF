@@ -1,13 +1,13 @@
 #!/usr/bin/perl
 
 
-package YAWF::XML;
+package TUWF::XML;
 
 
 # don't use this module directly, it won't work!
-#  use YAWF ':html';
+#  use TUWF ':html';
 # or
-#  use YAWF ':xml';
+#  use TUWF ':xml';
 # instead.
 
 
@@ -82,7 +82,7 @@ sub xml_escape {
 
 # output literal data (not HTML escaped)
 sub lit {
-  print { $YAWF::OBJ->resFd } $_ for @_;
+  print { $TUWF::OBJ->resFd } $_ for @_;
 }
 
 
@@ -105,7 +105,7 @@ sub _tag {
   my $name = shift;
   $name  =~ y/A-Z/a-z/ if $indirect;
 
-  my $t = $YAWF::OBJ->{_YAWF}{xml_pretty} ? "\n".(' 'x(@lasttags*$YAWF::OBJ->{_YAWF}{xml_pretty})) : '';
+  my $t = $TUWF::OBJ->{_TUWF}{xml_pretty} ? "\n".(' 'x(@lasttags*$TUWF::OBJ->{_TUWF}{xml_pretty})) : '';
   $t .= '<'.$name;
   $t .= ' '.(shift).'="'.xml_escape(shift).'"' while @_ > 1;
 
@@ -129,7 +129,7 @@ sub tag {
 # Ends the last opened tag
 sub end() {
   my $l=pop @lasttags;
-  lit "\n".(' 'x(@lasttags*$YAWF::OBJ->{_YAWF}{xml_pretty})) if $YAWF::OBJ->{_YAWF}{xml_pretty};
+  lit "\n".(' 'x(@lasttags*$TUWF::OBJ->{_TUWF}{xml_pretty})) if $TUWF::OBJ->{_TUWF}{xml_pretty};
   lit '</'.$l.'>';
 }
 

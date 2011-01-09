@@ -1,5 +1,5 @@
 
-package YAWF::Request;
+package TUWF::Request;
 
 use strict;
 use warnings;
@@ -30,7 +30,7 @@ sub reqInit {
   my $cgi = CGI::Minimal->new();
   die "Truncated post request\n" if $cgi->truncated;
 
-  $self->{_YAWF}{Req}{c} = $cgi;
+  $self->{_TUWF}{Req}{c} = $cgi;
 }
 
 
@@ -41,24 +41,24 @@ sub reqParam {
   my($s, $n) = @_;
   if($n) {
     return wantarray
-      ? map { defined $_ ? decode_utf8 $_ : '' } $s->{_YAWF}{Req}{c}->param($n)
-      : defined $s->{_YAWF}{Req}{c}->param($n) ? decode_utf8 $s->{_YAWF}{Req}{c}->param($n) : '';
+      ? map { defined $_ ? decode_utf8 $_ : '' } $s->{_TUWF}{Req}{c}->param($n)
+      : defined $s->{_TUWF}{Req}{c}->param($n) ? decode_utf8 $s->{_TUWF}{Req}{c}->param($n) : '';
   }
-  return $s->{_YAWF}{Req}{c}->param();
+  return $s->{_TUWF}{Req}{c}->param();
 }
 
 
 # returns the MIME Type of an uploaded file, requires form name as argument,
 # can return an array if multiple file uploads have the same form name
 sub reqUploadMIME {
-  my $c = shift->{_YAWF}{Req}{c};
+  my $c = shift->{_TUWF}{Req}{c};
   return $c->param_mime(shift);
 }
 
 
 # same as reqUploadMIME, only this one fetches filenames
 sub reqUploadFileName {
-  my $c = shift->{_YAWF}{Req}{c};
+  my $c = shift->{_TUWF}{Req}{c};
   return $c->param_filename(shift);
 }
 
@@ -68,7 +68,7 @@ sub reqUploadFileName {
 sub reqSaveUpload {
   my($s, $n, $f) = @_;
   open my $F, '>', $f or die "Unable to write to $f: $!";
-  print $F $s->{_YAWF}{Req}{c}->param($n);
+  print $F $s->{_TUWF}{Req}{c}->param($n);
   close $F;
 }
 

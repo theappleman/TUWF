@@ -1,14 +1,14 @@
-YAWF - Yet Another Website Framework [or] Yorhel's Awesome Website Framework
+TUWF - The Ultimate Website Framework
 
 
   This package provides the following set of modules:
 
-    YAWF
-    YAWF::DB
-    YAWF::XML
-    YAWF::Misc
-    YAWF::Request
-    YAWF::Response
+    TUWF
+    TUWF::DB
+    TUWF::XML
+    TUWF::Misc
+    TUWF::Request
+    TUWF::Response
 
 
   Dependencies:
@@ -17,7 +17,7 @@ YAWF - Yet Another Website Framework [or] Yorhel's Awesome Website Framework
       CGI::Minimal
 
     Optional
-      DBI              for SQL functionality (YAWF::DB)
+      DBI              for SQL functionality (TUWF::DB)
       FCGI             to run in a FastCGI environment
       Time::HiRes      with debugging enabled
       PerlIO::gzip     output compression
@@ -31,16 +31,19 @@ YAWF - Yet Another Website Framework [or] Yorhel's Awesome Website Framework
     more information.
 
     The API of this module is in flux, and I am not one to care much about
-    backwards compatibility. If you decide to use YAWF, either get one version
+    backwards compatibility. If you decide to use TUWF, either get one version
     and stick to that, or be sure to read all commit messages if you want to
     stay up-to-date.
 
 
   TODO
 
+    * Implement own CGI and cookie handling functions
     * More liberal/better configurable code layouting
       (not limited to the [sitename]/(Handler|Util|DB)/*.pm layout)
     * Documentation!
+    * Improve SQL abstraction
+    * Improve data validation
     * Ports and testing for more enviroments
     * Better examples
     * Test suite

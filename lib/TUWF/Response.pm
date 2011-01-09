@@ -1,5 +1,5 @@
 
-package YAWF::Response;
+package TUWF::Response;
 
 
 use strict;
@@ -18,11 +18,11 @@ our @EXPORT = qw|
 sub resInit {
   my $self = shift;
 
-  $self->{_YAWF}{Res} = {
+  $self->{_TUWF}{Res} = {
     status => 200,
     headers => [
       'Content-Type' => 'text/html; charset=UTF-8',
-      'X-Powered-By' => 'Perl-YAWF',
+      'X-Powered-By' => 'Perl-TUWF',
     ],
     content => '',
   };
@@ -31,7 +31,7 @@ sub resInit {
   eval { require PerlIO::gzip; };
 
   # open output buffer
-  $self->resBuffer($self->{_YAWF}{content_encoding}||'auto');
+  $self->resBuffer($self->{_TUWF}{content_encoding}||'auto');
 }
 
 
@@ -43,7 +43,7 @@ sub resInit {
 # Header names are case-insensitive
 sub resHeader {
   my($self, $name, $value, $add) = @_;
-  my $h = $self->{_YAWF}{Res}{headers};
+  my $h = $self->{_TUWF}{Res}{headers};
 
   if($add) {
     push @$h, $name, $value;
@@ -84,7 +84,7 @@ sub resHeader {
 sub resBuffer {
   my $self = shift;
   my $act = shift;
-  my $i = $self->{_YAWF}{Res};
+  my $i = $self->{_TUWF}{Res};
 
   my $h = $self->resHeader('Content-Encoding');
   $h = !$h ? 'none' : $h eq 'gzip' ? 'gzip' : $h eq 'deflate' ? 'deflate' : 'none';
@@ -122,15 +122,15 @@ sub resBuffer {
 
 # Returns the file descriptor where output functions can 'print' to
 sub resFd {
-  return shift->{_YAWF}{Res}{fd};
+  return shift->{_TUWF}{Res}{fd};
 }
 
 
 # Returns or sets the HTTP status
 sub resStatus {
   my($self, $new) = @_;
-  $self->{_YAWF}{Res}{status} = $new if $new;
-  return $self->{_YAWF}{Res}{status};
+  $self->{_TUWF}{Res}{status} = $new if $new;
+  return $self->{_TUWF}{Res}{status};
 }
 
 
@@ -151,7 +151,7 @@ sub resRedirect {
 # Send everything we have buffered to the client
 sub resFinish {
   my $self = shift;
-  my $i = $self->{_YAWF}{Res};
+  my $i = $self->{_TUWF}{Res};
 
   close $i->{fd};
   $self->resHeader('Content-Length' => length($i->{content}));

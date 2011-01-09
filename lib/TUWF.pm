@@ -1,8 +1,7 @@
-# YAWF.pm - the core module for YAWF
-#   Yet Another Website Framework
-#   Yorhels Awesome Website Framework
+# TUWF.pm - the core module for TUWF
+#  The Ultimate Website Framework
 
-package YAWF;
+package TUWF;
 
 use strict;
 use warnings;
@@ -17,10 +16,10 @@ our $OBJ;
 my @handlers;
 
 
-# 'redirect' this import to YAWF::XML
+# 'redirect' this import to TUWF::XML
 sub import {
-  require YAWF::XML;
-  YAWF::XML->import(@_);
+  require TUWF::XML;
+  TUWF::XML->import(@_);
 }
 
 
@@ -29,23 +28,23 @@ sub init {
   my %o = (
     mail_from => '<noreply-yawf@blicky.net>',
     mail_sendmail => '/usr/sbin/sendmail',
-    error_500_handler => \&YAWF::DefaultHandlers::error_500,
-    error_404_handler => \&YAWF::DefaultHandlers::error_404,
+    error_500_handler => \&TUWF::DefaultHandlers::error_500,
+    error_404_handler => \&TUWF::DefaultHandlers::error_404,
     @_
   );
   die "No namespace argument specified!" if !$o{namespace};
 
   # create object
   $OBJ = bless {
-    _YAWF => \%o,
+    _TUWF => \%o,
     $o{object_data} && ref $o{object_data} eq 'HASH' ? %{ delete $o{object_data} } : (),
-  }, 'YAWF::Object';
+  }, 'TUWF::Object';
 
   # install a warning handler to write to the log file
-  $SIG{__WARN__} = sub { $YAWF::OBJ->log($_) for @_; };
+  $SIG{__WARN__} = sub { $TUWF::OBJ->log($_) for @_; };
 
   # load optional modules
-  require Time::HiRes if $OBJ->debug || $OBJ->{_YAWF}{log_slow_pages};
+  require Time::HiRes if $OBJ->debug || $OBJ->{_TUWF}{log_slow_pages};
 
   # load the modules
   $OBJ->load_modules;
@@ -83,22 +82,22 @@ sub register {
 
 
 # The namespace which inherits all functions to be available in the global
-# object. These functions are not inherited by the main YAWF namespace.
-package YAWF::Object;
+# object. These functions are not inherited by the main TUWF namespace.
+package TUWF::Object;
 
-use YAWF::Response;
-use YAWF::Request;
-use YAWF::Misc;
+use TUWF::Response;
+use TUWF::Request;
+use TUWF::Misc;
 
 
 # This function will load all site modules and import the exported functions
 sub load_modules {
   my $s = shift;
-  if($s->{_YAWF}{db_login}) {
-    require YAWF::DB;
-    import YAWF::DB;
+  if($s->{_TUWF}{db_login}) {
+    require TUWF::DB;
+    import TUWF::DB;
   }
-  (my $f = $s->{_YAWF}{namespace}) =~ s/::/\//g;
+  (my $f = $s->{_TUWF}{namespace}) =~ s/::/\//g;
   for my $p (@INC) {
     for (glob $p.'/'.$f.'/{DB,Util,Handler}/*.pm') {
       (my $m = $_) =~ s{^\Q$p/}{};
@@ -117,10 +116,10 @@ sub load_modules {
 sub handle_request {
   my $self = shift;
 
-  my $start = [Time::HiRes::gettimeofday()] if $self->debug || $OBJ->{_YAWF}{log_slow_pages};
+  my $start = [Time::HiRes::gettimeofday()] if $self->debug || $OBJ->{_TUWF}{log_slow_pages};
 
   # put everything in an eval to catch any error, even
-  # those caused by a YAWF core module
+  # those caused by a TUWF core module
   eval { 
 
     # initialize request and response objects
@@ -128,15 +127,15 @@ sub handle_request {
     $self->resInit();
     
     # make sure our DB connection is still there and start a new transaction
-    $self->dbCheck() if $self->{_YAWF}{db_login};
+    $self->dbCheck() if $self->{_TUWF}{db_login};
 
     # call pre request handler, if any
-    $self->{_YAWF}{pre_request_handler}->($self) if $self->{_YAWF}{pre_request_handler};
+    $self->{_TUWF}{pre_request_handler}->($self) if $self->{_TUWF}{pre_request_handler};
 
     # find the handler
     my $loc = $self->reqPath;
     study $loc;
-    my $han = $self->{_YAWF}{error_404_handler};
+    my $han = $self->{_TUWF}{error_404_handler};
     my @args;
     for (@handlers ? 0..$#handlers/2 : ()) {
       if($loc =~ /^$handlers[$_*2]$/) {
@@ -151,15 +150,15 @@ sub handle_request {
 
     # give 404 page if the handler returned 404...
     if($ret && $ret eq '404') {
-      $ret = $self->{_YAWF}{error_404_handler}->($self) if $han ne $self->{_YAWF}{error_404_handler};
-      YAWF::DefaultHandlers::error_404($self) if $ret && $ret eq '404';
+      $ret = $self->{_TUWF}{error_404_handler}->($self) if $han ne $self->{_TUWF}{error_404_handler};
+      TUWF::DefaultHandlers::error_404($self) if $ret && $ret eq '404';
     }
 
     # execute post request handler, if any
-    $self->{_YAWF}{post_request_handler}->($self) if $self->{_YAWF}{post_request_handler};
+    $self->{_TUWF}{post_request_handler}->($self) if $self->{_TUWF}{post_request_handler};
 
     # commit changes
-    $self->dbCommit if $self->{_YAWF}{db_login};
+    $self->dbCommit if $self->{_TUWF}{db_login};
   };
 
   # error handling
@@ -167,7 +166,7 @@ sub handle_request {
     chomp( my $err = $@ );
 
     # act as if the changes to the DB never happened
-    if($self->{_YAWF}{db_login}) {
+    if($self->{_TUWF}{db_login}) {
       eval { $self->dbRollBack; };
       warn $@ if $@;
     }
@@ -176,12 +175,12 @@ sub handle_request {
     # The handler should manually call dbCommit if it makes any changes to the DB
     eval {
       $self->resInit;
-      $self->{_YAWF}{error_500_handler}->($self, $err);
+      $self->{_TUWF}{error_500_handler}->($self, $err);
     };
     if($@) {
       chomp( my $m = $@ );
       warn "Error handler died as well, something is seriously wrong with your code. ($m)\n";
-      YAWF::DefaultHandlers::error_500($self, $err);
+      TUWF::DefaultHandlers::error_500($self, $err);
     }
 
     # write detailed information about this error to the log
@@ -201,14 +200,14 @@ sub handle_request {
 
   # log debug information in the form of:
   # >  12ms (SQL:  8ms,  2 qs) for http://beta.vndb.org/v10
-  my $time = Time::HiRes::tv_interval($start)*1000 if $self->debug || $self->{_YAWF}{log_slow_pages};
-  if($self->debug || ($self->{_YAWF}{log_slow_pages} && $self->{_YAWF}{log_slow_pages} < $time)) {
+  my $time = Time::HiRes::tv_interval($start)*1000 if $self->debug || $self->{_TUWF}{log_slow_pages};
+  if($self->debug || ($self->{_TUWF}{log_slow_pages} && $self->{_TUWF}{log_slow_pages} < $time)) {
     # SQL stats (don't count the ping and commit as queries, but do count their time)
     my($sqlt, $sqlc) = (0);
-    if($self->{_YAWF}{db_login}) {
-      $sqlc = grep $_->[0] ne 'ping/rollback' && $_->[0] ne 'commit', @{$self->{_YAWF}{DB}{queries}};
+    if($self->{_TUWF}{db_login}) {
+      $sqlc = grep $_->[0] ne 'ping/rollback' && $_->[0] ne 'commit', @{$self->{_TUWF}{DB}{queries}};
       $sqlt += $_->[1]*1000
-        for (@{$self->{_YAWF}{DB}{queries}});
+        for (@{$self->{_TUWF}{DB}{queries}});
     }
 
     $self->log(sprintf('>%4dms (SQL:%4dms,%3d qs) for %s',
@@ -219,7 +218,7 @@ sub handle_request {
 
 # convenience function
 sub debug {
-  return shift->{_YAWF}{debug};
+  return shift->{_TUWF}{debug};
 }
 
 
@@ -229,7 +228,7 @@ sub log {
   my($self, $msg, $excl) = @_;
   chomp $msg;
   $msg =~ s/\n/\n  | /g;
-  if($self->{_YAWF}{logfile} && open my $F, '>>:utf8', $self->{_YAWF}{logfile}) {
+  if($self->{_TUWF}{logfile} && open my $F, '>>:utf8', $self->{_TUWF}{logfile}) {
     flock $F, 2;
     seek $F, 0, 2;
     printf $F "[%s] %s: %s\n", scalar localtime(), $self->reqURI||'[init]', $msg if !$excl;
@@ -243,7 +242,7 @@ sub log {
 
 # put the default handlers in a separate namespace
 # (in case we do decide to use the HTML generator here)
-package YAWF::DefaultHandlers;
+package TUWF::DefaultHandlers;
 
 
 # these are defaults, you really want to replace these boring pages

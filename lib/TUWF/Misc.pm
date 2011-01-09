@@ -1,5 +1,5 @@
 
-package YAWF::Misc;
+package TUWF::Misc;
 # Yeah, just put all miscellaneous functions in one module!
 # Geez, talk about being sloppy...
 
@@ -13,7 +13,7 @@ our @EXPORT = ('mail', 'formValidate');
 
 # Some pre-defined templates. It's possible to add templates at any time
 # and from any file by executing something like:
-#  $YAWF::Misc::templates{templatename} = qr/regex/;
+#  $TUWF::Misc::templates{templatename} = qr/regex/;
 our %templates = (
   mail       => qr/^[^@<>]+@[^@.<>]+(?:\.[^@.<>]+)+$/,
   url        => qr/^(http|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?$/,
@@ -128,7 +128,7 @@ sub mail {
   die "No To: specified!\n" if !$hs{To};
   die "No Subject: specified!\n" if !$hs{Subject};
   $hs{'Content-Type'} ||= 'text/plain; charset=\'UTF-8\'';
-  $hs{From} ||= $self->{_YAWF}{mail_from};
+  $hs{From} ||= $self->{_TUWF}{mail_from};
   $body =~ s/\r?\n/\n/g;
 
   my $mail = '';
@@ -138,7 +138,7 @@ sub mail {
   }
   $mail .= sprintf "\n%s", $body;
 
-  if(open(my $mailer, '|-:utf8', "$self->{_YAWF}{mail_sendmail} -t -f '$hs{From}'")) {
+  if(open(my $mailer, '|-:utf8', "$self->{_TUWF}{mail_sendmail} -t -f '$hs{From}'")) {
     print $mailer $mail;
     die "Error running sendmail ($!)"
       if !close($mailer);

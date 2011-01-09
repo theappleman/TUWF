@@ -1,5 +1,5 @@
 
-package YAWF::DB;
+package TUWF::DB;
 
 use strict;
 use warnings;
@@ -14,8 +14,8 @@ our @EXPORT = qw|
 
 sub dbInit {
   my $self = shift;
-  $self->{_YAWF}{DB} = {
-    sql => DBI->connect(@{$self->{_YAWF}{db_login}}, {
+  $self->{_TUWF}{DB} = {
+    sql => DBI->connect(@{$self->{_TUWF}{db_login}}, {
       PrintError => 0, RaiseError => 1, AutoCommit => 0,
       mysql_enable_utf8 => 1, # DBD::mysql
       pg_enable_utf8    => 1, # DBD::Pg
@@ -28,10 +28,10 @@ sub dbInit {
 
 sub dbCheck {
   my $self = shift;
-  my $info = $self->{_YAWF}{DB};
+  my $info = $self->{_TUWF}{DB};
 
   my $start;
-  if($self->debug || $self->{_YAWF}{log_slow_pages}) {
+  if($self->debug || $self->{_TUWF}{log_slow_pages}) {
     $info->{queries} = [];
     $start = [Time::HiRes::gettimeofday()];
   }
@@ -43,26 +43,26 @@ sub dbCheck {
   $self->dbRollBack;
   push(@{$info->{queries}},
     [ 'ping/rollback', Time::HiRes::tv_interval($start) ])
-   if $self->debug || $self->{_YAWF}{log_slow_pages};
+   if $self->debug || $self->{_TUWF}{log_slow_pages};
 }
 
 
 sub dbDisconnect {
-  shift->{_YAWF}{DB}{sql}->disconnect();
+  shift->{_TUWF}{DB}{sql}->disconnect();
 }
 
 
 sub dbCommit {
   my $self = shift;
-  my $start = [Time::HiRes::gettimeofday()] if $self->debug || $self->{_YAWF}{log_slow_pages};
-  $self->{_YAWF}{DB}{sql}->commit();
-  push(@{$self->{_YAWF}{DB}{queries}}, [ 'commit', Time::HiRes::tv_interval($start) ])
-    if $self->debug || $self->{_YAWF}{log_slow_pages};
+  my $start = [Time::HiRes::gettimeofday()] if $self->debug || $self->{_TUWF}{log_slow_pages};
+  $self->{_TUWF}{DB}{sql}->commit();
+  push(@{$self->{_TUWF}{DB}{queries}}, [ 'commit', Time::HiRes::tv_interval($start) ])
+    if $self->debug || $self->{_TUWF}{log_slow_pages};
 }
 
 
 sub dbRollBack {
-  shift->{_YAWF}{DB}{sql}->rollback();
+  shift->{_TUWF}{DB}{sql}->rollback();
 }
 
 
@@ -104,14 +104,14 @@ sub sqlhelper { # type, query, @list
   my $self = shift;
   my $type = shift;
   my $sqlq = shift;
-  my $s = $self->{_YAWF}{DB}{sql};
+  my $s = $self->{_TUWF}{DB}{sql};
 
-  my $start = [Time::HiRes::gettimeofday()] if $self->debug || $self->{_YAWF}{log_slow_pages};
+  my $start = [Time::HiRes::gettimeofday()] if $self->debug || $self->{_TUWF}{log_slow_pages};
 
   $sqlq =~ s/\r?\n/ /g;
   $sqlq =~ s/  +/ /g;
   my(@q) = @_ ? sqlprint($sqlq, @_) : ($sqlq);
-  $self->log($q[0].' | "'.join('", "', @q[1..$#q]).'"') if $self->{_YAWF}{log_queries};
+  $self->log($q[0].' | "'.join('", "', @q[1..$#q]).'"') if $self->{_TUWF}{log_queries};
 
   my $q = $s->prepare($q[0]);
   $q->execute($#q ? @q[1..$#q] : ());
@@ -120,7 +120,7 @@ sub sqlhelper { # type, query, @list
                        $q->rows;
   $q->finish();
 
-  push(@{$self->{_YAWF}{DB}{queries}}, [ \@q, Time::HiRes::tv_interval($start) ]) if $self->debug || $self->{_YAWF}{log_slow_pages};
+  push(@{$self->{_TUWF}{DB}{queries}}, [ \@q, Time::HiRes::tv_interval($start) ]) if $self->debug || $self->{_TUWF}{log_slow_pages};
 
   $r = 0  if $type == 0 && (!$r || $r == 0);
   $r = {} if $type == 1 && (!$r || ref($r) ne 'HASH');
