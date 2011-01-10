@@ -18,8 +18,8 @@ our $OBJ = bless {
     # defaults
     mail_from => '<noreply-yawf@blicky.net>',
     mail_sendmail => '/usr/sbin/sendmail',
-    error_500_handler => \&TUWF::DefaultHandlers::error_500,
-    error_404_handler => \&TUWF::DefaultHandlers::error_404,
+    error_500_handler => \&error_500,
+    error_404_handler => \&error_404,
   }
 }, 'TUWF::Object';
 
@@ -104,6 +104,46 @@ sub load_recursive {
     $rec->($d, $f, $m) if -d "$d/$f";
   }
 }
+
+
+# these are defaults, you really want to replace these boring pages
+sub error_404 {
+  my $s = shift;
+  $s->resInit;
+  $s->resStatus(404);
+  very_simple_page($s, '404 - Page Not Found', 'The page you were looking for does not exist...');
+}
+
+
+# a *very* helpful error message :-)
+sub error_500 {
+  my $s = shift;
+  $s->resInit;
+  $s->resStatus(500);
+  very_simple_page($s, '500 - Internal Server Error', 'Ooooopsie~, something went wrong!');
+}
+
+
+# and an equally beautiful page
+sub very_simple_page {
+  my($s, $title, $msg) = @_;
+  my $fd = $s->resFd;
+  print $fd <<__;
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+ <title>$title</title>
+</head>
+<body>
+ <h1>$title</h1>
+ <p>$msg</p>
+</body>
+</html>
+__
+}
+
 
 
 
@@ -250,52 +290,6 @@ sub log {
     close $F;
   }
 }
-
-
-
-# put the default handlers in a separate namespace
-# (in case we do decide to use the HTML generator here)
-package TUWF::DefaultHandlers;
-
-
-# these are defaults, you really want to replace these boring pages
-sub error_404 {
-  my $s = shift;
-  $s->resInit;
-  $s->resStatus(404);
-  very_simple_page($s, '404 - Page Not Found', 'The page you were looking for does not exist...');
-}
-
-
-# a *very* helpful error message :-)
-sub error_500 {
-  my $s = shift;
-  $s->resInit;
-  $s->resStatus(500);
-  very_simple_page($s, '500 - Internal Server Error', 'Ooooopsie~, something went wrong!');
-}
-
-
-# and an equally beautiful page
-sub very_simple_page {
-  my($s, $title, $msg) = @_;
-  my $fd = $s->resFd;
-  print $fd <<__;
-<!DOCTYPE html
-  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
- <title>$title</title>
-</head>
-<body>
- <h1>$title</h1>
- <p>$msg</p>
-</body>
-</html>
-__
-}
-
 
 
 1;
