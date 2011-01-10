@@ -12,35 +12,38 @@ use Carp 'croak';
 #  - using a threaded environment (threading sucks anyway)
 #  - handling multiple requests asynchronously (which this framework can't do)
 #  - handling multiple sites in the same perl process. This may be useful in
-#    a FastCGI or mod_perl environment, so need to find a fix for that >.>
-our $OBJ;
-my @handlers;
-
-
-# 'redirect' this import to TUWF::XML
-sub import {
-  my $self = shift;
-  my $pack = caller();
-  croak $@ if !eval "package $pack; use TUWF::XML qw|@_|; 1";
-}
-
-
-# The holy init() function
-sub init {
-  my %o = (
+#    a mod_perl environment, which we don't support.
+our $OBJ = bless {
+  _TUWF => {
+    # defaults
     mail_from => '<noreply-yawf@blicky.net>',
     mail_sendmail => '/usr/sbin/sendmail',
     error_500_handler => \&TUWF::DefaultHandlers::error_500,
     error_404_handler => \&TUWF::DefaultHandlers::error_404,
-    @_
-  );
-  die "No namespace argument specified!" if !$o{namespace};
+  }
+}, 'TUWF::Object';
 
-  # create object
-  $OBJ = bless {
-    _TUWF => \%o,
-    $o{object_data} && ref $o{object_data} eq 'HASH' ? %{ delete $o{object_data} } : (),
-  }, 'TUWF::Object';
+my @handlers;
+
+
+sub import {
+  my $self = shift;
+  my $pack = caller();
+
+  # load and import TUWF::XML when requested
+  croak $@ if @_ && !eval "package $pack; use TUWF::XML qw|@_|; 1";
+}
+
+
+# set TUWF configuration variables
+sub set {
+  $OBJ->{_TUWF} = { %{$OBJ->{_TUWF}}, @_ };
+}
+
+
+sub run {
+  # load the database module if requested
+  $OBJ->load_module('TUWF::DB') if $OBJ->{_TUWF}{db_login};
 
   # install a warning handler to write to the log file
   $SIG{__WARN__} = sub { $TUWF::OBJ->log($_) for @_; };
@@ -48,11 +51,8 @@ sub init {
   # load optional modules
   require Time::HiRes if $OBJ->debug || $OBJ->{_TUWF}{log_slow_pages};
 
-  # load the modules
-  $OBJ->load_modules;
-
   # initialize DB connection
-  $OBJ->dbInit if $o{db_login};
+  $OBJ->dbInit if $OBJ->{_TUWF}{db_login};
 
   # plain old CGI
   if($ENV{GATEWAY_INTERFACE} && $ENV{GATEWAY_INTERFACE} =~ /CGI/i) {
@@ -70,7 +70,7 @@ sub init {
   }
 
   # close the DB connection
-  $OBJ->dbDisconnect if $o{db_login};
+  $OBJ->dbDisconnect if $OBJ->{_TUWF}{db_login};
 }
 
 
@@ -80,37 +80,48 @@ sub register {
 }
 
 
+# Load modules
+sub load {
+  $OBJ->load_module($_) for (@_);
+}
+
+# Load modules, recursively
+# All submodules should be under the same directory in @INC
+sub load_recursive {
+  my $rec;
+  $rec = sub {
+    my($d, $f, $m) = @_;
+    for my $s (glob "$d/$f/*") {
+      $OBJ->load_module("${m}::$1") if -f $s && $s =~ /([^\/]+)\.pm$/;
+      $rec->($d, "$f/$1", "${m}::$1") if -d $s && $s =~ /([^\/]+)$/;
+    }
+  };
+  for my $m (@_) {
+    (my $f = $m) =~ s/::/\//g;
+    my $d = (grep +(-d "$_/$f" or -s "$_/$f.pm"), @INC)[0];
+    croak "No module or submodules of '$m' found" if !$d;
+    $OBJ->load_module($m) if -s "$d/$f.pm";
+    $rec->($d, $f, $m) if -d "$d/$f";
+  }
+}
 
 
 
 # The namespace which inherits all functions to be available in the global
-# object. These functions are not inherited by the main TUWF namespace.
+# object.
 package TUWF::Object;
 
 use TUWF::Response;
 use TUWF::Request;
 use TUWF::Misc;
 
+require Carp; # but don't import()
+our @CARP_NOT = ('TUWF');
 
-# This function will load all site modules and import the exported functions
-sub load_modules {
-  my $s = shift;
-  if($s->{_TUWF}{db_login}) {
-    require TUWF::DB;
-    import TUWF::DB;
-  }
-  (my $f = $s->{_TUWF}{namespace}) =~ s/::/\//g;
-  for my $p (@INC) {
-    for (glob $p.'/'.$f.'/{DB,Util,Handler}/*.pm') {
-      (my $m = $_) =~ s{^\Q$p/}{};
-      $m =~ s/\.pm$//;
-      $m =~ s{/}{::}g;
-      # the following is pretty much equivalent to eval "use $m";
-      require $_;
-      no strict 'refs';
-      "$m"->import if *{"${m}::import"}{CODE};
-    }
-  }
+
+sub load_module {
+  my($self, $module) = @_;
+  Carp::croak $@ if !eval "use $module; 1";
 }
 
 
