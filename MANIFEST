@@ -1,5 +1,9 @@
 Build.PL
 COPYING
+examples/multifile.pl
+examples/MyWebsite/ErrorPages.pm
+examples/singlefile.pl
+examples/xml.pl
 lib/TUWF.pm
 lib/TUWF.pod
 lib/TUWF/DB.pm
