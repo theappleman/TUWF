@@ -256,7 +256,7 @@ sub handle_request {
   my $time = Time::HiRes::tv_interval($start)*1000 if $self->debug || $self->{_TUWF}{log_slow_pages};
   if($self->debug || ($self->{_TUWF}{log_slow_pages} && $self->{_TUWF}{log_slow_pages} < $time)) {
     # SQL stats (don't count the ping and commit as queries, but do count their time)
-    my($sqlt, $sqlc) = (0);
+    my($sqlt, $sqlc) = (0, 0);
     if($self->{_TUWF}{db_login}) {
       $sqlc = grep $_->[0] ne 'ping/rollback' && $_->[0] ne 'commit', @{$self->{_TUWF}{DB}{queries}};
       $sqlt += $_->[1]*1000
