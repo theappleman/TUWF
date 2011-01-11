@@ -3,18 +3,18 @@ package TUWF::Request;
 
 use strict;
 use warnings;
-use Encode 'decode_utf8';
+use Encode 'decode_utf8', 'encode_utf8';
 use Exporter 'import';
-use CGI::Minimal;
 
 our @EXPORT = qw|
-  reqInit reqParam reqUploadMIME reqUploadFileName reqSaveUpload reqCookie
-  reqMethod reqHeader reqPath reqBaseURI reqURI reqHost reqIP
+  reqInit reqGET reqPOST reqParam reqUploadMIME reqUploadFileName reqSaveUpload
+  reqCookie reqMethod reqHeader reqPath reqBaseURI reqURI reqHost reqIP
 |;
 
 
 sub reqInit {
   my $self = shift;
+  $self->{_TUWF}{Req} = {};
 
   # lighttpd doesn't always split the query string from REQUEST_URI
   if($ENV{SERVER_SOFTWARE}||'' =~ /lighttpd/) {
@@ -22,55 +22,106 @@ sub reqInit {
       if ($ENV{REQUEST_URI}||'') =~ /\?/;
   }
 
-  # reset and re-initialise some vars to make CGI::Minimal work in FastCGI
-  CGI::Minimal::reset_globals;
-  CGI::Minimal::allow_hybrid_post_get(1);
-  CGI::Minimal::max_read_size(10*1024*1024); # allow 10MB of POST data
+  # TODO: generate a proper error page instead of 500
+  my $meth = $self->reqMethod;
+  die "Unsupported HTTP method '$meth'\n" if $meth !~ /^(GET|POST|HEAD)$/;
 
-  my $cgi = CGI::Minimal->new();
-  die "Truncated post request\n" if $cgi->truncated;
+  $self->{_TUWF}{Req}{GET} = _parse_urlencoded($ENV{QUERY_STRING});
 
-  $self->{_TUWF}{Req}{c} = $cgi;
+  # TODO: set configurable maximum on CONTENT_LENGTH
+  if($meth eq 'POST' && $ENV{CONTENT_LENGTH}) {
+    # TODO: add support multipart/form-data support
+    die "multipart/form-data is currently not supported.\n" if ($ENV{'CONTENT_TYPE'}||'') =~ m{^multipart/form-data};
+
+    # TODO: generate a proper error page instead of 500
+    my $data;
+    die "Couldn't read all POST data.\n" if $ENV{CONTENT_LENGTH} > read STDIN, $data, $ENV{CONTENT_LENGTH}, 0;
+    $self->{_TUWF}{Req}{POST} = _parse_urlencoded($data);
+  }
 }
 
 
+sub _parse_urlencoded {
+  my %dat;
+  for (split /[;&]/, decode_utf8 shift) {
+    my($key, $val) = split /=/, $_, 2;
+    next if !defined $key or !defined $val;
+    for ($key, $val) {
+      s/\+/ /gs;
+      # assume %XX sequences represent UTF-8 bytes and properly decode it.
+      s#((?:%[0-9a-fA-F]{2})+)#
+        (my $s=encode_utf8 $1) =~ s/%(.{2})/chr hex($1)/eg;
+        decode_utf8($s);
+      #eg;
+      s/%u([0-9a-fA-F]{4})/chr hex($1)/eg;
+    }
+    push @{$dat{$key}}, $val;
+  }
+  return \%dat;
+}
 
-# wrapper around CGI::Minimal's param(), only properly encodes everything to
-# Perl's internal UTF-8 format, and returns an empty string on undef.
+
+# get parameters from the query string
+sub reqGET {
+  my($s, $n) = @_;
+  my $lst = $s->{_TUWF}{Req}{GET};
+  return keys %$lst if !$n;
+  return wantarray ? () : undef if !$lst->{$n};
+  return wantarray ? @{$lst->{$n}} : $lst->{$n}[0];
+}
+
+
+# get parameters from the POST body
+sub reqPOST {
+  my($s, $n) = @_;
+  my $lst = $s->{_TUWF}{Req}{POST};
+  return keys %$lst if !$n;
+  return wantarray ? () : undef if !$lst->{$n};
+  return wantarray ? @{$lst->{$n}} : $lst->{$n}[0];
+}
+
+
+# get parameters from either or both POST and GET
+# (POST has priority over GET in scalar context)
 sub reqParam {
   my($s, $n) = @_;
-  if($n) {
-    return wantarray
-      ? map { defined $_ ? decode_utf8 $_ : '' } $s->{_TUWF}{Req}{c}->param($n)
-      : defined $s->{_TUWF}{Req}{c}->param($n) ? decode_utf8 $s->{_TUWF}{Req}{c}->param($n) : '';
+  my $nfo = $s->{_TUWF}{Req};
+  if(!$n) {
+    my %keys = map +($_,1), keys(%{$nfo->{GET}}), keys(%{$nfo->{POST}});
+    return keys %keys;
   }
-  return $s->{_TUWF}{Req}{c}->param();
+  my $val = [
+    $nfo->{POST}{$n} ? @{$nfo->{POST}{$n}} : (),
+    $nfo->{GET}{$n}  ? @{$nfo->{GET}{$n}}  : (),
+  ];
+  return wantarray ? () : undef if !@$val;
+  return wantarray ? @$val : $val->[0];
 }
 
 
 # returns the MIME Type of an uploaded file, requires form name as argument,
 # can return an array if multiple file uploads have the same form name
-sub reqUploadMIME {
-  my $c = shift->{_TUWF}{Req}{c};
-  return $c->param_mime(shift);
-}
+#sub reqUploadMIME {
+#  my $c = shift->{_TUWF}{Req}{c};
+#  return $c->param_mime(shift);
+#}
 
 
 # same as reqUploadMIME, only this one fetches filenames
-sub reqUploadFileName {
-  my $c = shift->{_TUWF}{Req}{c};
-  return $c->param_filename(shift);
-}
+#sub reqUploadFileName {
+#  my $c = shift->{_TUWF}{Req}{c};
+#  return $c->param_filename(shift);
+#}
 
 
 # saves file contents identified by the form name to the specified file
 # (doesn't support multiple file upload using the same form name yet)
-sub reqSaveUpload {
-  my($s, $n, $f) = @_;
-  open my $F, '>', $f or die "Unable to write to $f: $!";
-  print $F $s->{_TUWF}{Req}{c}->param($n);
-  close $F;
-}
+#sub reqSaveUpload {
+#  my($s, $n, $f) = @_;
+#  open my $F, '>', $f or die "Unable to write to $f: $!";
+#  print $F $s->{_TUWF}{Req}{c}->param($n);
+#  close $F;
+#}
 
 
 sub reqCookie {
@@ -81,7 +132,7 @@ sub reqCookie {
 
 
 sub reqMethod {
-  return ($ENV{REQUEST_METHOD}||'') =~ /post/i ? 'POST' : 'GET';
+  return $ENV{REQUEST_METHOD}||'GET';
 }
 
 
