@@ -7,6 +7,7 @@ package TUWF::XML;
 use strict;
 use warnings;
 use Exporter 'import';
+use Carp 'carp', 'croak';
 
 
 our(@EXPORT_OK, %EXPORT_TAGS, @htmltags, @htmlexport, @xmlexport, @htmlbool, $OBJ);
@@ -59,7 +60,10 @@ sub new {
 # (not a method)
 sub xml_escape {
   local $_ = shift;
-  return '' if !$_ && $_ ne '0';
+  if(!defined $_) {
+    carp "Attempting to XML-escape an undefined value";
+    return '';
+  }
   s/&/&amp;/g;
   s/</&lt;/g;
   s/>/&gt;/g;
@@ -95,11 +99,16 @@ sub _tag {
   my $s = shift;
   my $indirect = shift; # called as tag() or as generated html function?
   my $name = shift;
-  $name  =~ y/A-Z/a-z/ if $indirect;
+  croak "Invalid XML tag name" if !$name || $name =~ /^(xml|[^a-z])/i || $name =~ / /;
+  $name =~ y/A-Z/a-z/ if $indirect;
 
   my $t = $s->{pretty} ? "\n".(' 'x(@{$s->{stack}}*$s->{pretty})) : '';
   $t .= '<'.$name;
-  $t .= ' '.(shift).'="'.xml_escape(shift).'"' while @_ > 1;
+  while(@_ > 1) {
+    my $attr = shift;
+    croak "Invalid XML attribute name" if !$attr || $attr =~ /^(xml|[^a-z])/i || $attr =~ / /;
+    $t .= qq{ $attr="}.xml_escape(shift).'"';
+  }
 
   push @_, undef if $indirect && !@_ && grep $name eq $_, @htmlbool;
 
