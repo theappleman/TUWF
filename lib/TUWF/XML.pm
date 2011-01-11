@@ -10,7 +10,7 @@ use Exporter 'import';
 use Carp 'carp', 'croak';
 
 
-our(@EXPORT_OK, %EXPORT_TAGS, @htmltags, @htmlexport, @xmlexport, @htmlbool, $OBJ);
+our(@EXPORT_OK, %EXPORT_TAGS, @htmltags, @htmlexport, @xmlexport, %htmlbool, $OBJ);
 
 
 BEGIN {
@@ -24,7 +24,7 @@ BEGIN {
   |;
 
   # boolean (self-closing) tags
-  @htmlbool = qw| hr br img input area base frame link param |;
+  %htmlbool = map +($_,1), qw| hr br img input area base frame link param |;
 
   # functions to export
   @htmlexport = (@htmltags, qw| html lit txt tag end |);
@@ -35,7 +35,7 @@ BEGIN {
   for my $e (@htmltags) {
     *{__PACKAGE__."::$e"} = sub {
       my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
-      $s->_tag(1, $e, @_)
+      $s->tag(lc($e), @_, $htmlbool{lc($e)} && $#_%2 ? undef : ());
     }
   }
 
@@ -95,12 +95,10 @@ sub txt {
 #  'tagname', id => 'main', '<bar>'    <tagname id="main">&lt;bar&gt;</tagname>
 #  'tagname', id => 'main', undef      <tagname id="main" />
 #  'tagname', undef                    <tagname />
-sub _tag {
-  my $s = shift;
-  my $indirect = shift; # called as tag() or as generated html function?
+sub tag {
+  my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
   my $name = shift;
   croak "Invalid XML tag name" if !$name || $name =~ /^(xml|[^a-z])/i || $name =~ / /;
-  $name =~ y/A-Z/a-z/ if $indirect;
 
   my $t = $s->{pretty} ? "\n".(' 'x(@{$s->{stack}}*$s->{pretty})) : '';
   $t .= '<'.$name;
@@ -109,8 +107,6 @@ sub _tag {
     croak "Invalid XML attribute name" if !$attr || $attr =~ /^(xml|[^a-z])/i || $attr =~ / /;
     $t .= qq{ $attr="}.xml_escape(shift).'"';
   }
-
-  push @_, undef if $indirect && !@_ && grep $name eq $_, @htmlbool;
 
   if(!@_) {
     $t .= '>';
@@ -121,11 +117,6 @@ sub _tag {
   } else {
     $s->lit($t.'>'.xml_escape(shift).'</'.$name.'>');
   } 
-}
-
-sub tag {
-  my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
-  $s->_tag(0, @_);
 }
 
 
