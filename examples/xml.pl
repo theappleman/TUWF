@@ -32,7 +32,7 @@ $h->html();
   $h->h1('Page Title');
   $h->p('Paragraph');
  $h->end();
-$h->end();
+$h->end('html');
 
 
 # generate an pretty-printed XML document using the functional interface
@@ -42,6 +42,6 @@ xml();
 tag('root', attribute => 'value');
  tag('tag', 'Contents');
  tag('tag', attribute => 'value', 'Contents');
-end();
+end('root');
 print "\n";
 

@@ -121,9 +121,12 @@ sub tag {
 
 
 # Ends the last opened tag
-sub end() {
+sub end {
   my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
+  my $w = shift;
   my $l = pop @{$s->{stack}};
+  croak "No more tags to close" if !$l;
+  croak "Specified tag to end ($w) is not equal to the last opened tag ($l)" if $w && $w ne $l;
   $s->lit("\n".(' 'x(@{$s->{stack}}*$s->{pretty}))) if $s->{pretty};
   $s->lit('</'.$l.'>');
 }
