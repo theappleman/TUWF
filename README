@@ -13,22 +13,22 @@ TUWF - The Ultimate Website Framework
 
   Dependencies:
 
+    (Perl core modules not listed)
+
     Required
       CGI::Minimal
 
     Optional
       DBI              for SQL functionality (TUWF::DB)
       FCGI             to run in a FastCGI environment
-      Time::HiRes      with debugging enabled
       PerlIO::gzip     output compression
       CGI::Cookie::XS  to parse HTTP cookies
 
 
   Notes on usage
 
-    The documentation is still quite lacking, see README.concept for a general
-    overview, check examples/ for some examples, and read the source code for
-    more information.
+    The documentation is still quite lacking, check examples/ for some examples
+    and read the source code for more information.
 
     The API of this module is in flux, and I am not one to care much about
     backwards compatibility. If you decide to use TUWF, either get one version
@@ -42,10 +42,6 @@ TUWF - The Ultimate Website Framework
     * Documentation!
     * Improve SQL abstraction
     * Improve data validation
-    * Ports and testing for more enviroments
-    * Better examples
-    * Test suite
-    * Proper perl module packaging (Module::Build)
 
 
   Contact
