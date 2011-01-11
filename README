@@ -39,8 +39,6 @@ TUWF - The Ultimate Website Framework
   TODO
 
     * Implement own CGI and cookie handling functions
-    * More liberal/better configurable code layouting
-      (not limited to the [sitename]/(Handler|Util|DB)/*.pm layout)
     * Documentation!
     * Improve SQL abstraction
     * Improve data validation
