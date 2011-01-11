@@ -2,6 +2,7 @@ Build.PL
 COPYING
 examples/multifile.pl
 examples/MyWebsite/ErrorPages.pm
+examples/MyWebsite/InfoDump.pm
 examples/singlefile.pl
 examples/xml.pl
 lib/TUWF.pm
