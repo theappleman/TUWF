@@ -9,7 +9,7 @@ use warnings;
 use Exporter 'import';
 
 
-our(@EXPORT_OK, %EXPORT_TAGS, @htmltags, @htmlexport, @xmlexport, @htmlbool);
+our(@EXPORT_OK, %EXPORT_TAGS, @htmltags, @htmlexport, @xmlexport, @htmlbool, $OBJ);
 
 
 BEGIN {
@@ -32,7 +32,10 @@ BEGIN {
   # create the subroutines to map to the html tags
   no strict 'refs';
   for my $e (@htmltags) {
-    *{__PACKAGE__."::$e"} = sub { _tag(1, $e, @_) }
+    *{__PACKAGE__."::$e"} = sub {
+      my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
+      $s->_tag(1, $e, @_)
+    }
   }
 
   @EXPORT_OK = (@htmlexport, @xmlexport, 'xml_escape');
@@ -43,11 +46,17 @@ BEGIN {
 };
 
 
-# keeps track of the openend tags
-my @lasttags;
+sub new {
+  my($pack, %o) = @_;
+  return bless {
+    %o,
+    stack => [],
+  }, $pack;
+};
 
 
 # HTML escape, also does \n to <br /> conversion
+# (not a method)
 sub xml_escape {
   local $_ = shift;
   return '' if !$_ && $_ ne '0';
@@ -62,13 +71,15 @@ sub xml_escape {
 
 # output literal data (not HTML escaped)
 sub lit {
-  print { $TUWF::OBJ->resFd } $_ for @_;
+  my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
+  $s->{write}->($_) for @_;
 }
 
 
 # output text (HTML escaped)
 sub txt {
-  lit xml_escape $_ for @_;
+  my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
+  $s->lit(xml_escape $_) for @_;
 }
 
 
@@ -81,11 +92,12 @@ sub txt {
 #  'tagname', id => 'main', undef      <tagname id="main" />
 #  'tagname', undef                    <tagname />
 sub _tag {
+  my $s = shift;
   my $indirect = shift; # called as tag() or as generated html function?
   my $name = shift;
   $name  =~ y/A-Z/a-z/ if $indirect;
 
-  my $t = $TUWF::OBJ->{_TUWF}{xml_pretty} ? "\n".(' 'x(@lasttags*$TUWF::OBJ->{_TUWF}{xml_pretty})) : '';
+  my $t = $s->{pretty} ? "\n".(' 'x(@{$s->{stack}}*$s->{pretty})) : '';
   $t .= '<'.$name;
   $t .= ' '.(shift).'="'.xml_escape(shift).'"' while @_ > 1;
 
@@ -93,42 +105,47 @@ sub _tag {
 
   if(!@_) {
     $t .= '>';
-    lit $t;
-    push @lasttags, $name;
+    $s->lit($t);
+    push @{$s->{stack}}, $name;
   } elsif(!defined $_[0]) {
-    lit $t.' />';
+    $s->lit($t.' />');
   } else {
-    lit $t.'>'.xml_escape(shift).'</'.$name.'>';
+    $s->lit($t.'>'.xml_escape(shift).'</'.$name.'>');
   } 
 }
+
 sub tag {
-  _tag 0, @_;
+  my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
+  $s->_tag(0, @_);
 }
 
 
 # Ends the last opened tag
 sub end() {
-  my $l=pop @lasttags;
-  lit "\n".(' 'x(@lasttags*$TUWF::OBJ->{_TUWF}{xml_pretty})) if $TUWF::OBJ->{_TUWF}{xml_pretty};
-  lit '</'.$l.'>';
+  my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
+  my $l = pop @{$s->{stack}};
+  $s->lit("\n".(' 'x(@{$s->{stack}}*$s->{pretty}))) if $s->{pretty};
+  $s->lit('</'.$l.'>');
 }
 
 
 # Special function, this writes the XHTML 1.0 Strict doctype
 # (other doctypes aren't supported at the moment)
 sub html() {
-  lit qq|<!DOCTYPE html
+  my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
+  $s->lit(qq|<!DOCTYPE html
   PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">\n|;
-  push @lasttags, 'html';
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">|);
+  push @{$s->{stack}}, 'html';
 }
 
 
 # Writes an xml header, doesn't open an <xml> tag, and doesn't need an
 # end() either.
 sub xml() {
-  lit qq|<?xml version="1.0" encoding="UTF-8"?>\n|;
+  my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
+  $s->lit(qq|<?xml version="1.0" encoding="UTF-8"?>|);
 }
 
 
