@@ -32,7 +32,6 @@ TUWF - The Ultimate Website Framework
 
   TODO
 
-    * Implement own CGI and cookie handling functions
     * Documentation!
     * Improve SQL abstraction
     * Improve data validation
@@ -40,5 +39,5 @@ TUWF - The Ultimate Website Framework
 
   Contact
 
-    #vndb @ irc.synirc.net
+    projects@yorhel.nl
 

@@ -6,31 +6,32 @@ TUWF - The Ultimate Website Framework
 
 TUWF is a (relatively) small framework designed for writing websites. It
 provides an abstraction layer to various environment-specific tasks and has
-common functions to easy the creation of larger websites.
+common functions to ease the creation of both small and large websites.
 
 =head2 Introduction
 
-TUWF is quite different from other website frameworks. To get used to writing
-websites in TUWF it is important to understand what TUWF is, and more
-importantly, what it is not. The following sections explain some of the design
-principles and philosophies.
+TUWF is slightly different from other website frameworks in various aspects. To
+get used to writing websites in TUWF it is important to understand what TUWF
+is, and more importantly, what it is not. The following sections explain some
+of basic the design principles and philosophies.
 
 =head3 TUWF is for programmers
 
-Something I've learned after a few years of developing websites is that there
+Something I've learned after several years of developing websites is that there
 are two kinds of people involved in the programming aspect of web development:
 You have web developers and programmers. Web developers are the kind of people
-who, err, just like to get things done, and have less interest in technical
+who just like to get things done, and have less interest in technical
 correctness, performance, code-reuse and other such strange concepts.
-Programmers, on the other hand, have experience with writing other forms of
+Programmers, on the other hand, may have experience with writing other forms of
 software and realize the importance of maintainable code. They are thus willing
-to invest some extra time in doing things right the first time in order to write
-code that keeps being fun to maintain, even after a year of active development.
+to invest some extra time in doing things right the first time in order to
+write code that keeps being fun to maintain, even after a year of active
+development.
 
 TUWF - being rather unorthodox among the website frameworks - was written for
-the latter group. If you consider yourself a true C<web developer> - someone who
-wants to see results without investing too much time, you're probably better off
-using one of the more orthodox frameworks such as L<Catalyst> or
+the latter group. If you consider yourself a true C<web developer> - someone
+who wants to see results without investing too much time, you're probably
+better off using one of the more orthodox frameworks such as L<Catalyst> or
 L<CGI::Application>.
 
 =head3 XML is not for humans
@@ -49,6 +50,99 @@ care about their return value.
 This section isn't finished yet.
 
 
+
+=head2 General structure of a TUWF website
+
+A website written using TUWF consists of a single Perl script, optionally
+accompanied by several modules. The script is responsible for loading,
+initializing and running TUWF, and can be used as a CGI or FastCGI script. For
+small and simple websites, this script may contain the code for the entire
+website. Usually, however, the actual implementation of the website is spread
+among the various modules.
+
+The script can load the modules by calling C<TUWF::load()> or
+C<TUWF::load_recursive()>. TUWF configuration variables can be set using
+C<TUWF::set()>, and URIs can be mapped to functions using C<TUWF::register()>.
+These functions can also be called by the loaded modules. In fact, for larger
+websites it is common for the script to only initialize TUWF and load the
+modules, while all calls to C<TUWF::register()> are done from the modules.
+
+I<TODO: explain TUWF::Object>
+
+
+=head2 Loading TUWF
+
+I<TODO: Explain the import arguments to 'use TUWF'>
+
+
+
+=head1 FUNCTIONS
+
+I<TODO: Reference documentation on the main TUWF:: functions>
+
+
+
+=head1 BASIC METHODS
+
+I<TODO: Reference documentation on some basic object methods>
+
+
+=head1 LIMITATIONS
+
+TUWF may be The Ultimate Website Framework, but it is not the perfect solution
+to every problem. This section aims to document some of the limitations you may
+stumble upon.
+
+=over
+
+=item * One (sub)domain is one website. TUWF assumes that the website you are
+working on resides directly under a (sub)domain. That is, the homepage of your
+website has an URI like I<http://example.com/>, and all sub-pages are directly
+beneath it. (e.g. I<http://example.com/about> would be your "about" page).
+
+While it B<is> possible to run a TUWF website in a subdirectory (i.e. the
+homepage of the site would be I<http://example.com/mysite/>), you will have to
+prefix all HTML links and registered URIs with the name of the subdirectory.
+This is neither productive, nor will it be fun when you wish to rename that
+directory later on.
+
+=item * One website is one (sub)domain. In the same way as the previous point,
+TUWF is not made to handle websites that span multiple (sub)domains and have
+different behaviour for each one. It is possible - quite simple, even - to have
+a different subdomain affect some configuration parameter while keeping the
+structure and behaviour of the website the same as for the other domains. An
+example of this could be a language setting embedded in a subdomain:
+I<en.example.com> could show to the English version of your site, while
+I<de.example.com> will have the German translation.
+
+Things will become messy as soon as you want (sub)domains to behave
+differently. If you want I<forum.example.com> to host a forum and
+I<wiki.example.com> to be a wiki, you will want to avoid programming both
+subdomains in the same TUWF script. A common solution is to write a separate
+script for each subdomain. It is still possible to share code among both sites
+by means of modules.
+
+=item * The generated response is buffered. This means that you can't use TUWF
+for applications that require streaming dynamic content (e.g. a chat
+application), and you may get into memory issues when sending large files.
+
+=back
+
+
+
+
+=head1 COPYRIGHT
+
+Copyright (c) 2008-2011 Yoran Heling.
+
+This framework is free software available under the liberal MIT license. See
+the COPYING file in the distribution for the details.
+
+
+
+=head1 AUTHOR
+
+Yoran Heling <projects@yorhel.nl>
 
 =cut
 
