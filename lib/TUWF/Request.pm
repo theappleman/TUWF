@@ -5,9 +5,10 @@ use strict;
 use warnings;
 use Encode 'decode_utf8', 'encode_utf8';
 use Exporter 'import';
+use Carp 'croak';
 
 our @EXPORT = qw|
-  reqInit reqGET reqPOST reqParam reqUploadMIME reqUploadFileName reqSaveUpload
+  reqInit reqGET reqPOST reqParam reqUploadMIME reqUploadRaw reqSaveUpload
   reqCookie reqMethod reqHeader reqPath reqBaseURI reqURI reqHost reqIP
 |;
 
@@ -30,13 +31,15 @@ sub reqInit {
 
   # TODO: set configurable maximum on CONTENT_LENGTH
   if($meth eq 'POST' && $ENV{CONTENT_LENGTH}) {
-    # TODO: add support multipart/form-data support
-    die "multipart/form-data is currently not supported.\n" if ($ENV{'CONTENT_TYPE'}||'') =~ m{^multipart/form-data};
-
     # TODO: generate a proper error page instead of 500
     my $data;
     die "Couldn't read all POST data.\n" if $ENV{CONTENT_LENGTH} > read STDIN, $data, $ENV{CONTENT_LENGTH}, 0;
-    $self->{_TUWF}{Req}{POST} = _parse_urlencoded($data);
+
+    if(($ENV{'CONTENT_TYPE'}||'') =~ m{^multipart/form-data; boundary=(.+)$}) {
+      _parse_multipart($self, $data, $1);
+    } else {
+      $self->{_TUWF}{Req}{POST} = _parse_urlencoded($data);
+    }
   }
 }
 
@@ -58,6 +61,58 @@ sub _parse_urlencoded {
     push @{$dat{$key}}, $val;
   }
   return \%dat;
+}
+
+
+# Heavily inspired by CGI::Minimal::Multipart::_burst_multipart_buffer()
+sub _parse_multipart {
+  my($self, $data, $boundary) = @_;
+  my $nfo = $self->{_TUWF}{Req};
+  my $CRLF = "\015\012";
+
+  $nfo->{POST} = {};
+  $nfo->{FILES} = {};
+  $nfo->{MIMES} = {};
+
+  for my $p (split /--\Q$boundary\E(?:--)?$CRLF/, $data) {
+    next if !defined $p;
+    $p =~ s/$CRLF$//;
+    last if $p eq '--';
+    next if !$p;
+    my($header, $value) = split /$CRLF$CRLF/, $p, 2;
+
+    my($name, $mime, $filename) = ('', '', '');
+    for my $h (split /$CRLF/, $header) {
+      my($hn, $hv) = split /: /, $h, 2;
+      # Does not handle multipart/mixed, but those don't appear to be used in practice.
+      if($hn =~ /^Content-Type$/i) {
+        $mime = $hv;
+      }
+      if($hn =~ /^Content-Disposition$/i) {
+        for my $dis (split /; /, $hv) {
+          $name     = $2 if $dis =~ /^name=("?)(.*)\1$/;
+          $filename = $2 if $dis =~ /^filename=("?)(.*)\1$/;
+        }
+      }
+    }
+
+    $name = decode_utf8 $name;
+
+    # In the case of a file upload, use the filename as value instead of the
+    # data. This is to ensure that reqPOST() always returns decoded data.
+
+    # Note that I use the presence of a filename attribute for determining
+    # whether this parameters comes from an <input type="file"> rather than a
+    # regular form element. The standards do not require the filename to be
+    # present, but I am not aware of any browser that does not send it.
+    if($filename) {
+      push @{$nfo->{POST}{$name}}, decode_utf8 $filename;
+      push @{$nfo->{MIMES}{$name}}, decode_utf8 $mime;
+      push @{$nfo->{FILES}{$name}}, $value; # not decoded, can be binary
+    } else {
+      push @{$nfo->{POST}{$name}}, decode_utf8 $value;
+    }
+  }
 }
 
 
@@ -99,29 +154,33 @@ sub reqParam {
 }
 
 
-# returns the MIME Type of an uploaded file, requires form name as argument,
-# can return an array if multiple file uploads have the same form name
-#sub reqUploadMIME {
-#  my $c = shift->{_TUWF}{Req}{c};
-#  return $c->param_mime(shift);
-#}
+# returns the MIME Type of an uploaded file.
+sub reqUploadMIME {
+  my($self, $n) = @_;
+  my $nfo = $self->{_TUWF}{Req}{MIMES};
+  return keys %$nfo if !defined $n;
+  return wantarray ? () : undef if !$nfo->{$n};
+  return wantarray ? @{$nfo->{$n}} : $nfo->{$n}[0];
+}
 
 
-# same as reqUploadMIME, only this one fetches filenames
-#sub reqUploadFileName {
-#  my $c = shift->{_TUWF}{Req}{c};
-#  return $c->param_filename(shift);
-#}
+# returns the raw (encoded) contents of an uploaded file
+sub reqUploadRaw {
+  my($self, $n) = @_;
+  my $nfo = $self->{_TUWF}{Req}{FILES}{$n};
+  return wantarray ? () : undef if !$nfo;
+  return wantarray ? @$nfo : $nfo->[0];
+}
 
 
 # saves file contents identified by the form name to the specified file
 # (doesn't support multiple file upload using the same form name yet)
-#sub reqSaveUpload {
-#  my($s, $n, $f) = @_;
-#  open my $F, '>', $f or die "Unable to write to $f: $!";
-#  print $F $s->{_TUWF}{Req}{c}->param($n);
-#  close $F;
-#}
+sub reqSaveUpload {
+  my($s, $n, $f) = @_;
+  open my $F, '>', $f or croak "Unable to write to $f: $!";
+  print $F scalar $s->reqUploadRaw($n);
+  close $F;
+}
 
 
 sub reqCookie {
