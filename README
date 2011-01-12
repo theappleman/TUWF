@@ -17,7 +17,6 @@ TUWF - The Ultimate Website Framework
     DBI              for SQL functionality (TUWF::DB)
     FCGI             to run in a FastCGI environment
     PerlIO::gzip     output compression
-    CGI::Cookie::XS  to parse HTTP cookies
 
 
   Notes on usage

@@ -15,7 +15,6 @@ Module::Build->new(
     'PerlIO::gzip'    => 0,
     'FCGI'            => 0,
     'DBI'             => 0,
-    'CGI::Cookie::XS' => 0,
   },
   create_makefile_pl => 'traditional',
 )->create_build_script;

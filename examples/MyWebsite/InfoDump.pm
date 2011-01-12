@@ -59,6 +59,12 @@ sub info {
      $tr->($_, $self->reqHeader($_)) for ($self->reqHeader());
     end;
 
+    h2 'HTTP Cookies';
+    table;
+     thead; Tr; td 'Cookie'; td 'Value'; end; end;
+     $tr->($_, $self->reqCookie($_)) for ($self->reqCookie());
+    end;
+
     h2 'Misc. request functions';
     table;
      thead; Tr; td 'Function'; td 'Return value'; end; end;

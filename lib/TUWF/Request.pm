@@ -27,6 +27,7 @@ sub reqInit {
   my $meth = $self->reqMethod;
   die "Unsupported HTTP method '$meth'\n" if $meth !~ /^(GET|POST|HEAD)$/;
 
+  $self->{_TUWF}{Req}{Cookies} = _parse_cookies($ENV{HTTP_COOKIE} || $ENV{COOKIE});
   $self->{_TUWF}{Req}{GET} = _parse_urlencoded($ENV{QUERY_STRING});
 
   # TODO: set configurable maximum on CONTENT_LENGTH
@@ -116,6 +117,25 @@ sub _parse_multipart {
 }
 
 
+sub _parse_cookies {
+  my $str = shift;
+  return {} if !$str;
+
+  my %dat;
+  # The format of the Cookie: header is hardly standardized and the widely used
+  # implementations all differ in how they interpret the data. This (rather)
+  # lazy implementation assumes the cookie values are not escaped and don't
+  # contain any characters that are used within the header format.
+  for (split /[;,]/, decode_utf8 $str) {
+    s/^ +//;
+    s/ +$//;
+    next if !$_ || !m{^([^\(\)<>@,;:\\"/\[\]\?=\{\}\t\s]+)=("?)(.*)\2$};
+    $dat{$1} = $3 if !exists $dat{$1};
+  }
+  return \%dat;
+}
+
+
 # get parameters from the query string
 sub reqGET {
   my($s, $n) = @_;
@@ -184,9 +204,10 @@ sub reqSaveUpload {
 
 
 sub reqCookie {
-  require CGI::Cookie::XS;
-  my $c = CGI::Cookie::XS->fetch;
-  return $c && ref($c) eq 'HASH' && $c->{$_[1]} ? decode_utf8 $c->{$_[1]}[0] : '';
+  my($self, $n) = @_;
+  my $nfo = $self->{_TUWF}{Req}{Cookies};
+  return keys %$nfo if !defined $n;
+  return $nfo->{$n};
 }
 
 
