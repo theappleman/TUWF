@@ -47,6 +47,12 @@ sub info {
      $tr->($_, join "\n---\n", $self->reqPOST($_)) for ($self->reqPOST());
     end;
 
+    h2 'Uploaded files';
+    table;
+     thead; Tr; td 'Name'; td 'File size - File name - Mime type'; end; end;
+     $tr->($_, length($self->reqUploadRaw($_)).' - '.$self->reqPOST($_).' - '.$self->reqUploadMIME($_)) for ($self->reqUploadMIME());
+    end;
+
     h2 'HTTP Headers';
     table;
      thead; Tr; td 'Header'; td 'Value'; end; end;
@@ -87,12 +93,26 @@ sub forms {
     form method => 'POST', action => '/info';
      for (0..5) {
        input type => 'checkbox', name => 'checkbox', value => $_, id => "checkbox_$_", $_%2 ? (checked => 'checked') : ();
-       label for => "checkthing_$_", "checkbox $_";
+       label for => "checkbox_$_", "checkbox $_";
      }
      br;
      label for => 'text', 'Text: ';
      use utf8;
      input type => 'text', name => 'text', id => 'text', value => 'こんにちは';
+     br;
+     input type => 'submit';
+    end;
+
+    h2 'POST (multipart)';
+    form method => 'POST', action => '/info', enctype => 'multipart/form-data';
+     for (0..5) {
+       input type => 'checkbox', name => 'check', value => $_, id => "check_$_", $_%2 ? (checked => 'checked') : ();
+       label for => "check_$_", "check $_";
+     }
+     br;
+     label for => 'file1', 'File 1: '; input type => 'file', name => 'file1', id => 'file1';
+     br;
+     label for => 'file2', 'File 2: '; input type => 'file', name => 'file2', id => 'file2';
      br;
      input type => 'submit';
     end;
