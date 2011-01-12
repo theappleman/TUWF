@@ -212,7 +212,7 @@ sub reqCookie {
 
 
 sub reqMethod {
-  return $ENV{REQUEST_METHOD}||'GET';
+  return decode_utf8 $ENV{REQUEST_METHOD}||'GET';
 }
 
 
@@ -225,13 +225,13 @@ sub reqHeader {
   my($self, $name) = @_;
   if($name) {
     (my $v = uc $_[1]) =~ tr/-/_/;
-    return $ENV{"HTTP_$v"}||'';
+    return decode_utf8 $ENV{"HTTP_$v"}||'';
   } else {
     return (map {
       if(/^HTTP_/) { 
         (my $h = lc $_) =~ s/_([a-z])/-\U$1/g;
         $h =~ s/^http-//;
-        $h;
+        decode_utf8 $h;
       } else { () }
     } sort keys %ENV);
   }
@@ -241,31 +241,29 @@ sub reqHeader {
 # returns the path part of the current URI, excluding the leading slash
 sub reqPath {
   (my $u = $ENV{REQUEST_URI}) =~ s{^/+}{};
-  return $u;
+  return decode_utf8 $u;
 }
 
 
 # returns base URI, excluding trailing slash
 sub reqBaseURI {
-  return ($ENV{HTTPS} ? 'https://' : 'http://').$ENV{HTTP_HOST};
+  return decode_utf8 ($ENV{HTTPS} ? 'https://' : 'http://').$ENV{HTTP_HOST};
 }
 
 
-# returns undef if the request isn't initialized yet
 sub reqURI {
-  return $ENV{HTTP_HOST} && defined $ENV{REQUEST_URI} ?
-    ($ENV{HTTPS} ? 'https://' : 'http://').$ENV{HTTP_HOST}.$ENV{REQUEST_URI}.($ENV{QUERY_STRING} ? '?'.$ENV{QUERY_STRING} : '')
-    : undef;
+  my $s = shift;
+  return $s->reqBaseURI().decode_utf8($ENV{REQUEST_URI}.($ENV{QUERY_STRING} ? '?'.$ENV{QUERY_STRING} : ''));
 }
 
 
 sub reqHost {
-  return $ENV{HTTP_HOST};
+  return decode_utf8 $ENV{HTTP_HOST};
 }
 
 
 sub reqIP {
-  return $ENV{REMOTE_ADDR};
+  return decode_utf8 $ENV{REMOTE_ADDR};
 }
 
 
