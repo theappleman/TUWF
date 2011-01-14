@@ -10,6 +10,7 @@ lib/TUWF.pod
 lib/TUWF/DB.pm
 lib/TUWF/Misc.pm
 lib/TUWF/Request.pm
+lib/TUWF/Request.pod
 lib/TUWF/Response.pm
 lib/TUWF/XML.pm
 MANIFEST			This list of files

@@ -1,0 +1,158 @@
+=head1 NAME
+
+TUWF::Request - Request parsing and handling for TUWF
+
+=head1 DESCRIPTION
+
+This module is responsible for parsing and handling the request data. This
+module is automatically loaded by TUWF and its methods can be used without
+requiring any special work.
+
+This module can not be used outside of the TUWF framework.
+
+=head1 METHODS
+
+The following methods are added to the main TUWF object:
+
+=head2 reqGET(name)
+
+Get parameters from the query string. When I<name> is not given or undef,
+returns a list of all parameter names (in no defined order). When used in array
+context and with I<name> given, will return all values of the parameter in the
+order that they appear in the query string. When used in scalar context and
+with I<name> given, will return the value of the first occurence of the
+parameter. When I<name> is given, but there exists no parameter with that name,
+C<reqGET> will return an empty list in array context or C<undef> otherwise.
+Examples:
+
+  # Let the query string be the following:
+  #  "key=value&foo=bar1&foo=bar2"
+  # Then:
+  my @list = $self->reqGET();     # @list = ('key', 'foo')
+  my $key = $self->reqGET('key'); # $key = 'value'
+  my $foo = $self->reqGET('foo'); # $foo = 'bar1'
+  my @foo = $self->reqGET('foo'); # @foo = ('bar1', 'bar2')
+  my $no  = $self->reqGET('no');  # $no = undef
+  my @no  = $self->reqGET('no');  # @no = ()
+
+=head2 reqPOST(name)
+
+Behaves the same as C<reqGET()>, but fetches the information from the POST data
+of the request instead. Unlike many CGI libraries, C<reqPOST()> will B<not>
+return the file contents when the parameter comes from a file upload input
+element, instead, it will return the file name.
+
+=head2 reqParam(name)
+
+Combines C<reqGET()> and C<reqPOST()>. The behaviour is the same as both
+functions, but C<reqParam()> returns data from both the query string and POST
+data. In listings, POST parameters and values are always listed before the GET
+parameters and values, and in scalar context the value of the POST parameter
+has priotity over the GET value.
+
+This function behaves similar to the C<param()> function of many CGI libraries,
+with the exception that (like all other TUWF methods) C<reqMethod()> returns
+all data in Perls native unicode format and that for file uploads, the file
+name is returned instead of its contents.
+
+=head2 reqUploadMIME(name)
+
+When I<name> is not given, returns a list of all parameter names that represent
+an uploaded file (in no particular order). In array context and when I<name> is
+given, returns the MIME type of all uploaded files corresponding to the named
+parameter, in the order that they appear in the POST data. In scalar context
+and when I<name> is given, will return the MIME type of the first uploaded file
+corresponding to the named parameter. When the named parameter does not exist
+or does not represent an uploaded file, C<reqUploadMIME()> will return an empty
+list in array context or C<undef> otherwise.
+
+It is important to note that this function B<only> works with parameters that
+actually represent an uploaded file. If a parameter comes from a file upload
+input element, but the user did not use it to actually upload a file (i.e. left
+it empty), then C<reqUploadMIME()> will treat it as if the parameter did not
+exist at all. The parameter will then still show up in C<reqPOST()>, but with
+an empty string as "file name".
+
+=head2 reqUploadRaw(name)
+
+In list context, returns the contents of all uploaded files corresponding to
+the named parameter, in the order that they appear in the POST data. In scalar
+context, returns the contents of the first uploaded file.
+
+Unlike all other methods, this method does B<NOT> return the data in Perls
+native unicode format, but will return the data as a binary string. The reason
+for this is that TUWF has no way of knowing in which encoding the uploaded file
+is, and the file may not even represent text at all, but could be any binary
+file (e.g. a JPEG image).
+
+=head2 reqSaveUpload(name, file)
+
+Saves the contents of the first file uploaded with parameter I<name> to
+I<file>. Throws an error if it was unable to open I<file> for writing.
+
+=head2 reqCookie(name)
+
+When I<name> is not given, returns a list of all cookies names sent with the
+request, in no specific order. Otherwise, returns the value of the named
+cookie, or C<undef> if the cookie does not exist.
+
+=head2 reqMethod()
+
+Returns the HTTP request method. Can be either C<HEAD>, C<GET> or C<POST>.
+
+=head2 reqHeader(name)
+
+When I<name> is not given, returns a list of all headers passed with the
+request, in alphabetical order. Otherwise, returns the value of the named
+header or an empty string if the header is not present.
+
+Header names are matched case-insensitive. The returned header names may not
+use the actual capitalization as used by the client. Some web servers may hide
+some request headers from the script. In particular, the C<Content-Type> and
+C<Content-Length> headers with POSTS requests may not be present, even when
+they have been sent by the client.
+
+=head2 reqPath()
+
+Returns the path part of the current page, relative to the I<base URI>. Does
+not include a leading slash.
+
+=head2 reqBaseURI()
+
+Returns the I<base URI> of the current page. That is, C<http(s)://> plus
+hostname. Does not include a trailing slash.
+
+=head2 reqURI()
+
+Returns the full URI of the current page, including C<http(s)://> and query
+string.
+
+=head2 reqHost()
+
+Returns the hostname (or domain name) of the website. Identical to
+C<reqHeader('Host')>.
+
+=head2 reqIP()
+
+Returns the IP address of the client. Note that this may be an IPv4 or IPv6
+address, depending on your webserver configuration.
+
+
+=head1 SEE ALSO
+
+L<TUWF>
+
+
+=head1 COPYRIGHT
+
+Copyright (c) 2008-2011 Yoran Heling.
+
+This framework is free software available under the liberal MIT license. See
+the COPYING file in the distribution for the details.
+
+
+=head1 AUTHOR
+
+Yoran Heling <projects@yorhel.nl>
+
+=cut
