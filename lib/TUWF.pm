@@ -18,6 +18,7 @@ our $OBJ = bless {
     # defaults
     mail_from => '<noreply-yawf@blicky.net>',
     mail_sendmail => '/usr/sbin/sendmail',
+    max_post_body => 10*1024*1024, # 10MB
     error_500_handler => \&_error_500,
     error_404_handler => \&_error_404,
   }

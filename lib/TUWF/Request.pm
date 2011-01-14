@@ -30,8 +30,10 @@ sub reqInit {
   $self->{_TUWF}{Req}{Cookies} = _parse_cookies($ENV{HTTP_COOKIE} || $ENV{COOKIE});
   $self->{_TUWF}{Req}{GET} = _parse_urlencoded($ENV{QUERY_STRING});
 
-  # TODO: set configurable maximum on CONTENT_LENGTH
   if($meth eq 'POST' && $ENV{CONTENT_LENGTH}) {
+    # TODO: generate proper error page...
+    die "POST body too large!\n" if $self->{_TUWF}{max_post_body} && $ENV{CONTENT_LENGTH} > $self->{_TUWF}{max_post_body};
+
     # TODO: generate a proper error page instead of 500
     my $data;
     die "Couldn't read all POST data.\n" if $ENV{CONTENT_LENGTH} > read STDIN, $data, $ENV{CONTENT_LENGTH}, 0;

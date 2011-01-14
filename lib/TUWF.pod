@@ -273,6 +273,12 @@ L<mail()|TUWF::Misc>. Default: C<E<lt>noreply-yawf@blicky.netE<gt>>.
 The path to the C<sendmail> command, used by L<mail()|TUWF::Misc>. Default:
 C</usr/sbin/sendmail>.
 
+=item max_post_body
+
+Maximum length of the contents of POST requests, in bytes. This disallows
+people to upload large files and potentially cause your script to run out of
+memory. Set to 0 to disable this limit. Default: 10MB.
+
 =item pre_request_handler
 
 Set to a subroutine reference if you want to perform some actions before TUWF
