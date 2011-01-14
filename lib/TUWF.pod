@@ -8,48 +8,73 @@ TUWF is a (relatively) small framework designed for writing websites. It
 provides an abstraction layer to various environment-specific tasks and has
 common functions to ease the creation of both small and large websites.
 
-=head2 Introduction
 
-I<Not sure whether this section is really useful...>
+=head2 Main features and limitations
 
-TUWF is slightly different from other website frameworks in various aspects. To
-get used to writing websites in TUWF it is important to understand what TUWF
-is, and more importantly, what it is not. The following sections explain some
-of basic the design principles and philosophies.
+TUWF may be The Ultimate Website Framework, but it is not the perfect solution
+to every problem. This section introduces you to some main features and
+limitations you will want to know about before using TUWF.
 
-=head3 TUWF is for programmers
+=over
 
-Something I've learned after several years of developing websites is that there
-are two kinds of people involved in the programming aspect of web development:
-You have web developers and programmers. Web developers are the kind of people
-who just like to get things done, and have less interest in technical
-correctness, performance, code-reuse and other such strange concepts.
-Programmers, on the other hand, may have experience with writing other forms of
-software and realize the importance of maintainable code. They are thus willing
-to invest some extra time in doing things right the first time in order to
-write code that keeps being fun to maintain, even after a year of active
-development.
+=item One (sub)domain is one website.
 
-TUWF - being rather unorthodox among the website frameworks - was written for
-the latter group. If you consider yourself a true C<web developer> - someone
-who wants to see results without investing too much time, you're probably
-better off using one of the more orthodox frameworks such as L<Catalyst|Catalyst> or
-L<CGI::Application|CGI::Application>.
+TUWF assumes that the website you are working on resides directly under a
+(sub)domain. That is, the homepage of your website has a URI like
+I<http://example.com/>, and all sub-pages are directly beneath it. (e.g.
+I<http://example.com/about> would be your "about" page).
 
-=head3 XML is not for humans
+While it B<is> possible to run a TUWF website in a subdirectory (i.e. the
+homepage of the site would be I<http://example.com/mysite/>), you will have to
+prefix all HTML links and registered URIs with the name of the subdirectory.
+This is neither productive, nor will it be fun when you wish to rename that
+directory later on.
 
-XML (and with that, HTML) was designed to be readable and writable by both
-machine and human. In reality it's not; writing XML is a huge pain, especially
-if you want it to be generated dynamically. This, however, doesn't change the
-fact that you really can't build a website without some form of XML. In order
-to ease the generation of XML, TUWF comes with an XML generator that combines the
-interfaces of L<XML::Writer> and L<XML::Generator> modules, enabling developers to
-write XML at ease from within several different subroutines without having to
-care about their return value.
+=item One website is one (sub)domain.
 
-=head3 ...and more
+In the same way as the previous point, TUWF is not made to handle websites that
+span multiple (sub)domains and have different behaviour for each one. It is
+possible - quite simple, even - to have a different subdomain affect some
+configuration parameter while keeping the structure and behaviour of the
+website the same as for the other domains. An example of this could be a
+language setting embedded in a subdomain: I<en.example.com> could show to the
+English version of your site, while I<de.example.com> will have the German
+translation.
 
-This section isn't finished yet.
+Things will become messy as soon as you want (sub)domains to behave
+differently. If you want I<forum.example.com> to host a forum and
+I<wiki.example.com> to be a wiki, you will want to avoid programming both
+subdomains in the same TUWF script. A common solution is to write a separate
+script for each subdomain. It is still possible to share code among both sites
+by means of modules.
+
+=item The generated response is buffered.
+
+This means that you can't use TUWF for applications that require streaming
+dynamic content (e.g. a chat application), and you may get into memory issues
+when sending large files.
+
+On the other hand, this does allow you to change the response completely while
+generating an other one, which is extremely useful if your code decides to
+throw an error while a part of the response has already been generated. In such
+a case your visitor will properly see your error page and not some messed up
+page that does not make sense. Thanks to this buffering, you will also be able
+to set cookies and send other headers B<after> generating the contents of the
+page.  And as an added bonus, your pages will be compressed more efficiently
+when output compression is enabled.
+
+=item Everything is UTF-8
+
+All TUWF functions (with some exceptions) will only accept and return Unicode
+strings in Perls native encoding. All incoming data is assumed to be encoded in
+UTF-8 and all outgoing data will be encoded in UTF-8. This is generally what
+you want when developing new applications. If, for some very strange reason,
+you want all I/O with the browser to be in anything other than UTF-8, you won't
+be able to use TUWF. It B<is> possible to use external resources which use
+other encodings, but you will have to C<decode()> that into Perls native
+encoding before giving it to any TUWF function.
+
+=back
 
 
 
@@ -69,9 +94,43 @@ These functions can also be called by the loaded modules. In fact, for larger
 websites it is common for the script to only initialize TUWF and load the
 modules, while all calls to C<TUWF::register()> are done from the modules.
 
-I<TODO: explain callback-based style>
+The framework is based on callbacks: At initialization, your code registers
+callbacks to the framework and then passes the control to TUWF using
+C<TUWF::run()>. TUWF will then handle requests and call the appropriate
+functions you registered.
 
-I<TODO: explain TUWF::Object>
+
+=head2 The TUWF Object
+
+While TUWF can not really be called I<object oriented>, it does use B<one>
+major object, called the I<TUWF object>. This object can be accessed from
+C<$TUWF::OBJ> and is passed as the first argument to all callback functions.
+Even though it is an "instance" of C<TUWF::Object>, you are encouraged to use
+it as if it is the main object for your website: You can use it to store global
+configuration settings and other shared data.
+
+All modules loaded using C<TUWF::load()> and its recursive counterpart can
+export functions; These functions are automatically imported in the
+C<TUWF::Object> namespace and can be used as methods of the TUWF object. This
+allows for an easy method to split the functionality of your website among
+different functions and files, without having to constantly load and import
+your utility modules in each other module that uses them.
+
+Of course, with all exported functions being imported into a single namespace,
+this does call for some function naming conventions to avoid function name
+conflicts and other confusing issues. The main TUWF methods use camelCase and
+are often prefixed with a short identifier to indicate to which module or
+section they belong. For example, the L<TUWF::Request|TUWF::Request> methods
+all start with C<req> and L<TUWF::Response|TUWF::Response> with C<res>. It is a
+good idea to adopt this style when you write your own methods.
+
+Be warned that the data in the TUWF object may or may not persist among
+multiple requests, depending on whether your script is running in FastCGI or
+CGI mode, respectively. In particular, it is a bad idea to store session data
+in this object, assuming it to be available on the next request. Storing data
+specific to a single request in the object is fine, as long as you make sure to
+reset or re-initialize the data at the beginning of the request. The
+C<pre_request_handler> is useful for such practice.
 
 
 =head2 Loading TUWF
@@ -143,7 +202,96 @@ additional arguments.
 
 =head2 TUWF::set(key => value, ..)
 
-Set TUWF configuration variables. I<TODO: document these.>
+Set TUWF configuration variables.
+
+=over
+
+=item content_encoding
+
+Set the default output encoding. Supported values are I<none>, I<gzip>,
+I<deflate>, I<auto>. See L<TUWF::Response|TUWF::Response> for more information.
+Default: auto.
+
+=item db_login
+
+When using the L<TUWF::DB|TUWF::DB> functions, set this to an arrayref with
+three elements, containing the first three arguments to C<DBI::connect()>.
+Default: undef (disabled).
+
+=item debug
+
+Set to a true value to enable debug mode. When debug mode is enabled and
+I<logfile> is specified, TUWF will log page generation times for each request.
+This flag can be easily read through the C<debug()> method, so you can also use
+is in your own code. Default: 0 (disabled).
+
+=item error_404_handler
+
+Set this to a subroutine reference if you want to write your own 404 error
+page. The subroutine will be called with TUWF object as only argument, and is
+expected to generate a response.
+
+=item error_500_handler
+
+Set this to a subroutine reference if you want to write your own 500 error
+page. The subroutine will be called with the TUWF object as first argument and
+the error message as second argument. When I<logfile> is set, a detailed error
+report will be written to the log. It is recommended to ignore the error
+message passed to your subroutine and to enable the log file, so you won't risk
+sending sensitive information to your visitors.
+
+=item logfile
+
+To enable logging, set this to a string that indicates the path to your log
+file. The file must of course be writable by your script. TUWF automatically
+logs all Perl warnings, and when one of your callbacks throws an exception a
+full request dump with useful information will be logged, allowing you to
+easily locate and fix the problem. You can also write information to the log
+yourself using the C<log()> method. Default: undef (disabled).
+
+=item log_slow_pages
+
+Setting this to a number will log all pages that took longer to generate than
+the time indicated in the number, in milliseconds. The format of the log line
+is the same as used when the I<debug> option is enabled. This option is ignored
+when I<debug> is enabled, since in that case all pages will be logged anyway.
+Default: 0 (disabled).
+
+=item log_queries
+
+Setting this to a true value will write all database queries to the log file.
+Useful when debugging queries, but can generate a lot of data. Default: 0
+(disabled).
+
+=item mail_from
+
+The default value of the C<From:> header of mail sent using
+L<mail()|TUWF::Misc>. Default: C<E<lt>noreply-yawf@blicky.netE<gt>>.
+
+=item mail_sendmail
+
+The path to the C<sendmail> command, used by L<mail()|TUWF::Misc>. Default:
+C</usr/sbin/sendmail>.
+
+=item pre_request_handler
+
+Set to a subroutine reference if you want to perform some actions before TUWF
+calls your URI handling function. This callback is often used for initializing
+or resetting request-specific data, and parsing cookies or other request data to
+set preferences or session information.
+
+=item post_request_handler
+
+Similar to I<post_request_handler>, except it will be called after the request
+has been processed but before it has been sent to the client. This callback
+will not be called if any of the functions before threw an exception.
+
+=item xml_pretty
+
+Passed to the I<pretty> option of C<TUWF::XML-E<gt>new()>. See
+L<TUWF::XML|TUWF::XML>. Default: 0 (disabled).
+
+=back
 
 =head2 TUWF::run()
 
@@ -165,75 +313,6 @@ calling C<TUWF::run()>.
 
 I<TODO: Reference documentation on some basic object methods>
 
-
-=head1 FEATURES AND LIMITATIONS
-
-TUWF may be The Ultimate Website Framework, but it is not the perfect solution
-to every problem. This section aims to document some of the limitations you may
-stumble upon. Note, however, that most of these limitations are considered
-features, and will as such not be "fixed".
-
-=over
-
-=item One (sub)domain is one website.
-
-TUWF assumes that the website you are working on resides directly under a
-(sub)domain. That is, the homepage of your website has a URI like
-I<http://example.com/>, and all sub-pages are directly beneath it. (e.g.
-I<http://example.com/about> would be your "about" page).
-
-While it B<is> possible to run a TUWF website in a subdirectory (i.e. the
-homepage of the site would be I<http://example.com/mysite/>), you will have to
-prefix all HTML links and registered URIs with the name of the subdirectory.
-This is neither productive, nor will it be fun when you wish to rename that
-directory later on.
-
-=item One website is one (sub)domain.
-
-In the same way as the previous point, TUWF is not made to handle websites that
-span multiple (sub)domains and have different behaviour for each one. It is
-possible - quite simple, even - to have a different subdomain affect some
-configuration parameter while keeping the structure and behaviour of the
-website the same as for the other domains. An example of this could be a
-language setting embedded in a subdomain: I<en.example.com> could show to the
-English version of your site, while I<de.example.com> will have the German
-translation.
-
-Things will become messy as soon as you want (sub)domains to behave
-differently. If you want I<forum.example.com> to host a forum and
-I<wiki.example.com> to be a wiki, you will want to avoid programming both
-subdomains in the same TUWF script. A common solution is to write a separate
-script for each subdomain. It is still possible to share code among both sites
-by means of modules.
-
-=item The generated response is buffered.
-
-This means that you can't use TUWF for applications that require streaming
-dynamic content (e.g. a chat application), and you may get into memory issues
-when sending large files.
-
-On the other hand, this does allow you to change the response completely while
-generating an other one, which is extremely useful if your code decides to
-throw an error while a part of the response has already been generated. In such
-a case your visitor will properly see your error page and not some messed up
-page that does not make sense. Thanks to this buffering, you will also be able
-to set cookies and send other headers B<after> generating the contents of the
-page.  And as an added bonus, your pages will be compressed more efficiently
-when output compression is enabled.
-
-=item Everything is UTF-8
-
-All TUWF functions (with some exceptions) will only accept and return Unicode
-strings in Perls native encoding. All incoming data is assumed to be encoded in
-UTF-8 and all outgoing data will be encoded in UTF-8. This is generally what
-you want when developing new applications. If, for some very strange reason,
-you want all I/O with the browser to be in anything other than UTF-8, you won't
-be able to use TUWF. It B<is> possible to use external resources which use
-other encodings, but you will have to C<decode()> that into Perls native
-encoding before giving it to any TUWF function.
-
-
-=back
 
 
 
