@@ -30,10 +30,8 @@ sub reqInit {
   return 'method' if $meth !~ /^(GET|POST|HEAD)$/;
 
   if($meth eq 'POST' && $ENV{CONTENT_LENGTH}) {
-    # TODO: generate proper error page...
-    die "POST body too large!\n" if $self->{_TUWF}{max_post_body} && $ENV{CONTENT_LENGTH} > $self->{_TUWF}{max_post_body};
+    return 'maxpost' if $self->{_TUWF}{max_post_body} && $ENV{CONTENT_LENGTH} > $self->{_TUWF}{max_post_body};
 
-    # TODO: generate a proper error page instead of 500
     my $data;
     die "Couldn't read all POST data.\n" if $ENV{CONTENT_LENGTH} > read STDIN, $data, $ENV{CONTENT_LENGTH}, 0;
 

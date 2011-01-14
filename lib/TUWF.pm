@@ -21,6 +21,7 @@ our $OBJ = bless {
     max_post_body => 10*1024*1024, # 10MB
     error_404_handler => \&_error_404,
     error_405_handler => \&_error_405,
+    error_413_handler => \&_error_413,
     error_500_handler => \&_error_500,
   }
 }, 'TUWF::Object';
@@ -110,7 +111,8 @@ sub load_recursive {
 
 # the default error handlers are quite ugly and generic...
 sub _error_404 { _very_simple_page($_[0], 404, '404 - Page Not Found', 'The page you were looking for does not exist...') }
-sub _error_405 { _very_simple_page($_[0], 405, '405 - Method not allowed.', 'The only allowed methods are: HEAD, GET or POST.') }
+sub _error_405 { _very_simple_page($_[0], 405, '405 - Method not allowed', 'The only allowed methods are: HEAD, GET or POST.') }
+sub _error_413 { _very_simple_page($_[0], 413, '413 - Request Entity Too Large', 'You were probably trying to upload a too large file.') }
 sub _error_500 { _very_simple_page($_[0], 500, '500 - Internal Server Error', 'Oops! Looks like something went wrong on our side.') }
 
 # a simple and ugly page for error messages
@@ -169,6 +171,7 @@ sub _handle_request {
     # initialize request
     my $err = $self->reqInit();
     return $self->{_TUWF}{error_405_handler}->($self) if $err eq 'method';
+    return $self->{_TUWF}{error_413_handler}->($self) if $err eq 'maxpost';
 
     # initialze response
     $self->resInit();
