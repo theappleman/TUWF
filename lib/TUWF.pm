@@ -18,8 +18,8 @@ our $OBJ = bless {
     # defaults
     mail_from => '<noreply-yawf@blicky.net>',
     mail_sendmail => '/usr/sbin/sendmail',
-    error_500_handler => \&error_500,
-    error_404_handler => \&error_404,
+    error_500_handler => \&_error_500,
+    error_404_handler => \&_error_404,
   }
 }, 'TUWF::Object';
 
@@ -43,7 +43,7 @@ sub set {
 
 sub run {
   # load the database module if requested
-  $OBJ->load_module('TUWF::DB') if $OBJ->{_TUWF}{db_login};
+  $OBJ->_load_module('TUWF::DB') if $OBJ->{_TUWF}{db_login};
 
   # install a warning handler to write to the log file
   $SIG{__WARN__} = sub { $TUWF::OBJ->log($_) for @_; };
@@ -56,7 +56,7 @@ sub run {
 
   # plain old CGI
   if($ENV{GATEWAY_INTERFACE} && $ENV{GATEWAY_INTERFACE} =~ /CGI/i) {
-    $OBJ->handle_request;
+    $OBJ->_handle_request;
   }
   # otherwise, assume a FastCGI environment
   else {
@@ -64,7 +64,7 @@ sub run {
     import FCGI;
     my $r = FCGI::Request();
     while($r->Accept() >= 0) {
-      $OBJ->handle_request;
+      $OBJ->_handle_request;
       $r->Finish();
     }
   }
@@ -82,7 +82,7 @@ sub register {
 
 # Load modules
 sub load {
-  $OBJ->load_module($_) for (@_);
+  $OBJ->_load_module($_) for (@_);
 }
 
 # Load modules, recursively
@@ -92,7 +92,7 @@ sub load_recursive {
   $rec = sub {
     my($d, $f, $m) = @_;
     for my $s (glob "$d/$f/*") {
-      $OBJ->load_module("${m}::$1") if -f $s && $s =~ /([^\/]+)\.pm$/;
+      $OBJ->_load_module("${m}::$1") if -f $s && $s =~ /([^\/]+)\.pm$/;
       $rec->($d, "$f/$1", "${m}::$1") if -d $s && $s =~ /([^\/]+)$/;
     }
   };
@@ -100,32 +100,32 @@ sub load_recursive {
     (my $f = $m) =~ s/::/\//g;
     my $d = (grep +(-d "$_/$f" or -s "$_/$f.pm"), @INC)[0];
     croak "No module or submodules of '$m' found" if !$d;
-    $OBJ->load_module($m) if -s "$d/$f.pm";
+    $OBJ->_load_module($m) if -s "$d/$f.pm";
     $rec->($d, $f, $m) if -d "$d/$f";
   }
 }
 
 
 # these are defaults, you really want to replace these boring pages
-sub error_404 {
+sub _error_404 {
   my $s = shift;
   $s->resInit;
   $s->resStatus(404);
-  very_simple_page($s, '404 - Page Not Found', 'The page you were looking for does not exist...');
+  _very_simple_page($s, '404 - Page Not Found', 'The page you were looking for does not exist...');
 }
 
 
 # a *very* helpful error message :-)
-sub error_500 {
+sub _error_500 {
   my $s = shift;
   $s->resInit;
   $s->resStatus(500);
-  very_simple_page($s, '500 - Internal Server Error', 'Ooooopsie~, something went wrong!');
+  _very_simple_page($s, '500 - Internal Server Error', 'Ooooopsie~, something went wrong!');
 }
 
 
 # and an equally beautiful page
-sub very_simple_page {
+sub _very_simple_page {
   my($s, $title, $msg) = @_;
   my $fd = $s->resFd;
   print $fd <<__;
@@ -159,14 +159,14 @@ require Carp; # but don't import()
 our @CARP_NOT = ('TUWF');
 
 
-sub load_module {
+sub _load_module {
   my($self, $module) = @_;
   Carp::croak $@ if !eval "use $module; 1";
 }
 
 
 # Handles a request (sounds pretty obvious to me...)
-sub handle_request {
+sub _handle_request {
   my $self = shift;
 
   my $start = [Time::HiRes::gettimeofday()] if $self->debug || $OBJ->{_TUWF}{log_slow_pages};
