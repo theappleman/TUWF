@@ -166,12 +166,15 @@ sub _handle_request {
 
   # put everything in an eval to catch any error, even
   # those caused by a TUWF core module
-  eval { 
+  my $eval = eval {
 
     # initialize request
     my $err = $self->reqInit();
-    return $self->{_TUWF}{error_405_handler}->($self) if $err eq 'method';
-    return $self->{_TUWF}{error_413_handler}->($self) if $err eq 'maxpost';
+    if($err) {
+      $self->{_TUWF}{error_405_handler}->($self) if $err eq 'method';
+      $self->{_TUWF}{error_413_handler}->($self) if $err eq 'maxpost';
+      return 1;
+    }
 
     # initialze response
     $self->resInit();
@@ -215,25 +218,24 @@ sub _handle_request {
 
     # commit changes
     $self->dbCommit if $self->{_TUWF}{db_login};
+    1;
   };
 
   # error handling
-  if($@) {
+  if(!$eval) {
     chomp( my $err = $@ );
 
     # act as if the changes to the DB never happened
-    if($self->{_TUWF}{db_login}) {
-      eval { $self->dbRollBack; };
-      warn $@ if $@;
-    }
+    warn $@ if $self->{_TUWF}{db_login} && !eval { $self->dbRollBack; 1 };
 
     # Call the error_500_handler
     # The handler should manually call dbCommit if it makes any changes to the DB
-    eval {
+    my $eval500 = eval {
       $self->resInit;
       $self->{_TUWF}{error_500_handler}->($self, $err);
+      1;
     };
-    if($@) {
+    if(!$eval500) {
       chomp( my $m = $@ );
       warn "Error handler died as well, something is seriously wrong with your code. ($m)\n";
       TUWF::_error_500($self, $err);
@@ -251,8 +253,7 @@ sub _handle_request {
   }
 
   # finalize response (flush output, etc)
-  eval { $self->resFinish; };
-  warn $@ if $@;
+  warn $@ if !eval { $self->resFinish; 1 };
 
   # log debug information in the form of:
   # >  12ms (SQL:  8ms,  2 qs) for http://beta.vndb.org/v10
