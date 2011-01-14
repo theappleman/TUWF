@@ -19,8 +19,9 @@ our $OBJ = bless {
     mail_from => '<noreply-yawf@blicky.net>',
     mail_sendmail => '/usr/sbin/sendmail',
     max_post_body => 10*1024*1024, # 10MB
-    error_500_handler => \&_error_500,
     error_404_handler => \&_error_404,
+    error_405_handler => \&_error_405,
+    error_500_handler => \&_error_500,
   }
 }, 'TUWF::Object';
 
@@ -107,27 +108,16 @@ sub load_recursive {
 }
 
 
-# these are defaults, you really want to replace these boring pages
-sub _error_404 {
-  my $s = shift;
-  $s->resInit;
-  $s->resStatus(404);
-  _very_simple_page($s, '404 - Page Not Found', 'The page you were looking for does not exist...');
-}
+# the default error handlers are quite ugly and generic...
+sub _error_404 { _very_simple_page($_[0], 404, '404 - Page Not Found', 'The page you were looking for does not exist...') }
+sub _error_405 { _very_simple_page($_[0], 405, '405 - Method not allowed.', 'The only allowed methods are: HEAD, GET or POST.') }
+sub _error_500 { _very_simple_page($_[0], 500, '500 - Internal Server Error', 'Oops! Looks like something went wrong on our side.') }
 
-
-# a *very* helpful error message :-)
-sub _error_500 {
-  my $s = shift;
-  $s->resInit;
-  $s->resStatus(500);
-  _very_simple_page($s, '500 - Internal Server Error', 'Ooooopsie~, something went wrong!');
-}
-
-
-# and an equally beautiful page
+# a simple and ugly page for error messages
 sub _very_simple_page {
-  my($s, $title, $msg) = @_;
+  my($s, $code, $title, $msg) = @_;
+  $s->resInit;
+  $s->resStatus($code);
   my $fd = $s->resFd;
   print $fd <<__;
 <!DOCTYPE html
@@ -176,8 +166,11 @@ sub _handle_request {
   # those caused by a TUWF core module
   eval { 
 
-    # initialize request and response objects
-    $self->reqInit();
+    # initialize request
+    my $err = $self->reqInit();
+    return $self->{_TUWF}{error_405_handler}->($self) if $err eq 'method';
+
+    # initialze response
     $self->resInit();
 
     # initialize TUWF::XML
@@ -211,7 +204,7 @@ sub _handle_request {
     # give 404 page if the handler returned 404...
     if($ret && $ret eq '404') {
       $ret = $self->{_TUWF}{error_404_handler}->($self) if $han ne $self->{_TUWF}{error_404_handler};
-      TUWF::DefaultHandlers::error_404($self) if $ret && $ret eq '404';
+      TUWF::_error_404($self) if $ret && $ret eq '404';
     }
 
     # execute post request handler, if any
@@ -240,7 +233,7 @@ sub _handle_request {
     if($@) {
       chomp( my $m = $@ );
       warn "Error handler died as well, something is seriously wrong with your code. ($m)\n";
-      TUWF::DefaultHandlers::error_500($self, $err);
+      TUWF::_error_500($self, $err);
     }
 
     # write detailed information about this error to the log

@@ -23,12 +23,11 @@ sub reqInit {
       if ($ENV{REQUEST_URI}||'') =~ /\?/;
   }
 
-  # TODO: generate a proper error page instead of 500
-  my $meth = $self->reqMethod;
-  die "Unsupported HTTP method '$meth'\n" if $meth !~ /^(GET|POST|HEAD)$/;
-
   $self->{_TUWF}{Req}{Cookies} = _parse_cookies($ENV{HTTP_COOKIE} || $ENV{COOKIE});
   $self->{_TUWF}{Req}{GET} = _parse_urlencoded($ENV{QUERY_STRING});
+
+  my $meth = $self->reqMethod;
+  return 'method' if $meth !~ /^(GET|POST|HEAD)$/;
 
   if($meth eq 'POST' && $ENV{CONTENT_LENGTH}) {
     # TODO: generate proper error page...
@@ -44,6 +43,8 @@ sub reqInit {
       $self->{_TUWF}{Req}{POST} = _parse_urlencoded($data);
     }
   }
+
+  return '';
 }
 
 
