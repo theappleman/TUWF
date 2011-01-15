@@ -14,7 +14,7 @@ This module can not be used outside of the TUWF framework.
 
 The following methods are added to the main TUWF object:
 
-=head2 reqGET(name)
+=head2 reqGet(name)
 
 Get parameters from the query string. When I<name> is not given or undef,
 returns a list of all parameter names (in no defined order). When used in array
@@ -22,29 +22,29 @@ context and with I<name> given, will return all values of the parameter in the
 order that they appear in the query string. When used in scalar context and
 with I<name> given, will return the value of the first occurence of the
 parameter. When I<name> is given, but there exists no parameter with that name,
-C<reqGET> will return an empty list in array context or C<undef> otherwise.
+C<reqGet> will return an empty list in array context or C<undef> otherwise.
 Examples:
 
   # Let the query string be the following:
   #  "key=value&foo=bar1&foo=bar2"
   # Then:
-  my @list = $self->reqGET();     # @list = ('key', 'foo')
-  my $key = $self->reqGET('key'); # $key = 'value'
-  my $foo = $self->reqGET('foo'); # $foo = 'bar1'
-  my @foo = $self->reqGET('foo'); # @foo = ('bar1', 'bar2')
-  my $no  = $self->reqGET('no');  # $no = undef
-  my @no  = $self->reqGET('no');  # @no = ()
+  my @list = $self->reqGet();     # @list = ('key', 'foo')
+  my $key = $self->reqGet('key'); # $key = 'value'
+  my $foo = $self->reqGet('foo'); # $foo = 'bar1'
+  my @foo = $self->reqGet('foo'); # @foo = ('bar1', 'bar2')
+  my $no  = $self->reqGet('no');  # $no = undef
+  my @no  = $self->reqGet('no');  # @no = ()
 
-=head2 reqPOST(name)
+=head2 reqPost(name)
 
-Behaves the same as C<reqGET()>, but fetches the information from the POST data
-of the request instead. Unlike many CGI libraries, C<reqPOST()> will B<not>
+Behaves the same as C<reqGet()>, but fetches the information from the POST data
+of the request instead. Unlike many CGI libraries, C<reqPost()> will B<not>
 return the file contents when the parameter comes from a file upload input
 element, instead, it will return the file name.
 
 =head2 reqParam(name)
 
-Combines C<reqGET()> and C<reqPOST()>. The behaviour is the same as both
+Combines C<reqGet()> and C<reqPost()>. The behaviour is the same as both
 functions, but C<reqParam()> returns data from both the query string and POST
 data. In listings, POST parameters and values are always listed before the GET
 parameters and values, and in scalar context the value of the POST parameter
@@ -70,7 +70,7 @@ It is important to note that this function B<only> works with parameters that
 actually represent an uploaded file. If a parameter comes from a file upload
 input element, but the user did not use it to actually upload a file (i.e. left
 it empty), then C<reqUploadMIME()> will treat it as if the parameter did not
-exist at all. The parameter will then still show up in C<reqPOST()>, but with
+exist at all. The parameter will then still show up in C<reqPost()>, but with
 an empty string as "file name".
 
 =head2 reqUploadRaw(name)

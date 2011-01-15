@@ -38,13 +38,13 @@ sub info {
     h2 'GET Parameters';
     table;
      thead; Tr; td 'Name'; td 'Value'; end; end;
-     $tr->($_, join "\n---\n", $self->reqGET($_)) for ($self->reqGET());
+     $tr->($_, join "\n---\n", $self->reqGet($_)) for ($self->reqGet());
     end;
 
     h2 'POST Parameters';
     table;
      thead; Tr; td 'Name'; td 'Value'; end; end;
-     $tr->($_, join "\n---\n", $self->reqPOST($_)) for ($self->reqPOST());
+     $tr->($_, join "\n---\n", $self->reqPost($_)) for ($self->reqPost());
     end;
 
     h2 'Uploaded files';

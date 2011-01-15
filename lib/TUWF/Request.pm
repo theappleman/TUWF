@@ -8,7 +8,7 @@ use Exporter 'import';
 use Carp 'croak';
 
 our @EXPORT = qw|
-  reqInit reqGET reqPOST reqParam reqUploadMIME reqUploadRaw reqSaveUpload
+  reqInit reqGet reqPost reqParam reqUploadMIME reqUploadRaw reqSaveUpload
   reqCookie reqMethod reqHeader reqPath reqBaseURI reqURI reqHost reqIP
 |;
 
@@ -138,7 +138,7 @@ sub _parse_cookies {
 
 
 # get parameters from the query string
-sub reqGET {
+sub reqGet {
   my($s, $n) = @_;
   my $lst = $s->{_TUWF}{Req}{GET};
   return keys %$lst if !$n;
@@ -148,7 +148,7 @@ sub reqGET {
 
 
 # get parameters from the POST body
-sub reqPOST {
+sub reqPost {
   my($s, $n) = @_;
   my $lst = $s->{_TUWF}{Req}{POST};
   return keys %$lst if !$n;

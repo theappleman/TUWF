@@ -6,6 +6,7 @@ package TUWF;
 use strict;
 use warnings;
 use Carp 'croak';
+use TUWF::XML;
 
 # Store the object in a global variable for some functions that don't get it
 # passed as an argument. This will break when:
@@ -246,8 +247,8 @@ sub _handle_request {
       "FATAL ERROR!\n".
       "HTTP Request Headers:\n".
       join('', map sprintf("  %s: %s\n", $_, $self->reqHeader($_)), $self->reqHeader).
-      "Param dump:\n".
-      join('', map sprintf("  %s: %s\n", $_, $self->reqParam($_)), $self->reqParam).
+      "POST dump:\n".
+      join('', map sprintf("  %s: %s\n", $_, $self->reqPost($_)), $self->reqPost).
       "Error:\n  $err\n"
     );
   }
