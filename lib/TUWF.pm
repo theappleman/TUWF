@@ -181,9 +181,10 @@ sub _handle_request {
     $self->resInit();
 
     # initialize TUWF::XML
-    $TUWF::XML::OBJ = TUWF::XML->new(
+    TUWF::XML->new(
       write  => sub { print { $self->resFd } $_ for @_ },
       pretty => $self->{_TUWF}{xml_pretty},
+      default => 1,
     );
 
     # make sure our DB connection is still there and start a new transaction

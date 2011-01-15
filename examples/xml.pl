@@ -37,7 +37,7 @@ $h->end('html');
 
 # generate an pretty-printed XML document using the functional interface
 print "\n\nXML document:\n";
-$TUWF::XML::OBJ = TUWF::XML->new(write => sub { print @_ }, pretty => 2);
+TUWF::XML->new(write => sub { print @_ }, pretty => 2, default => 1);
 xml();
 tag('root', attribute => 'value');
  tag('tag', 'Contents');

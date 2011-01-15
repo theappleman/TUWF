@@ -49,10 +49,12 @@ BEGIN {
 
 sub new {
   my($pack, %o) = @_;
-  return bless {
+  my $self = bless {
     %o,
     stack => [],
   }, $pack;
+  $OBJ = $self if $o{default};
+  return $self;
 };
 
 
