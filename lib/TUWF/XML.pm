@@ -49,6 +49,7 @@ BEGIN {
 
 sub new {
   my($pack, %o) = @_;
+  $o{write} ||= sub { print @_ };
   my $self = bless {
     %o,
     stack => [],

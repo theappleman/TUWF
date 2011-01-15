@@ -23,7 +23,7 @@ printf "xml_escape: %s\n\n", xml_escape '<br />';
 
 # generate a simple html page using the OO interface
 print "HTML page:\n";
-my $h = TUWF::XML->new(write => sub { print @_ });
+my $h = TUWF::XML->new();
 $h->html();
  $h->head();
   $h->title('Page Title');
@@ -37,7 +37,7 @@ $h->end('html');
 
 # generate an pretty-printed XML document using the functional interface
 print "\n\nXML document:\n";
-TUWF::XML->new(write => sub { print @_ }, pretty => 2, default => 1);
+TUWF::XML->new(pretty => 2, default => 1);
 xml();
 tag('root', attribute => 'value');
  tag('tag', 'Contents');
