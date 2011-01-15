@@ -39,7 +39,7 @@ BEGIN {
     }
   }
 
-  @EXPORT_OK = (@htmlexport, @xmlexport, 'xml_escape');
+  @EXPORT_OK = (@htmlexport, @xmlexport, 'xml_escape', 'html_escape');
   %EXPORT_TAGS = (
     html => \@htmlexport,
     xml  => \@xmlexport,
@@ -58,8 +58,7 @@ sub new {
 };
 
 
-# HTML escape, also does \n to <br /> conversion
-# (not a method)
+# XML escape (not a method)
 sub xml_escape {
   local $_ = shift;
   if(!defined $_) {
@@ -70,6 +69,13 @@ sub xml_escape {
   s/</&lt;/g;
   s/>/&gt;/g;
   s/"/&quot;/g;
+  return $_;
+}
+
+# HTML escape, also does \n to <br /> conversion
+# (not a method)
+sub html_escape {
+  local $_ = xml_escape shift;
   s/\r?\n/<br \/>/g;
   return $_;
 }
