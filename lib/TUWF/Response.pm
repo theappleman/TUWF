@@ -5,6 +5,7 @@ package TUWF::Response;
 use strict;
 use warnings;
 use Exporter 'import';
+use POSIX 'strftime';
 
 
 our @EXPORT = qw|
@@ -28,6 +29,7 @@ sub resInit {
       'Content-Type' => 'text/html; charset=UTF-8',
       'X-Powered-By' => 'Perl-TUWF',
     ],
+    cookies => {},
     content => '',
   };
 
@@ -71,6 +73,24 @@ sub resHeader {
     for (@r ? 0..$#r : ());
 
   return @_ == 3 || @_ == 2 && !wantarray ? $h[0] : @h;
+}
+
+
+# Adds a Set-Cookie header, arguments:
+# name, value, %options.
+# value = undef -> remove cookie,
+# options:
+#   expires, path, domain, secure, httponly
+sub resCookie {
+  my($self, $name, $value, %o) = @_;
+  my @attr = (sprintf '%s=%s', $name, defined($value)?$value:'');
+  $o{expires} = 0 if !defined $value;
+  push @attr, sprintf 'expires=%s', strftime("%a, %d %b %Y %H:%M:%S GMT", gmtime $o{expires}) if defined $o{expire};
+  push @attr, "path=$o{path}" if $o{path};
+  push @attr, "domain=$o{domain}" if $o{domain};
+  push @attr, 'secure'   if $o{secure};
+  push @attr, 'httponly' if $o{httponly};
+  $self->{_TUWF}{Res}{cookies}{$name} = join '; ', @attr;
 }
 
 
@@ -167,6 +187,7 @@ sub resFinish {
   printf "Status: %d\r\n", $i->{status};
   printf "%s: %s\r\n", $i->{headers}[$_*2], $i->{headers}[$_*2+1]
     for (0..$#{$i->{headers}}/2);
+  printf "Set-Cookie: %s\r\n", $i->{cookies}{$_} for (keys %{$i->{cookies}});
   print  "\r\n";
   print  $i->{content};
 
