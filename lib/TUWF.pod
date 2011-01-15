@@ -226,6 +226,16 @@ cookie domain:
   $self->resCookie(foo => 'bar', domain => '.example.org');
   # for each call to resCookie()
 
+Default: undef (disabled).
+
+=item cookie_prefix
+
+When set to a non-empty string, its value will be used as prefix to all cookie
+names used by C<reqCookie()> and C<resCookie()>. C<reqCookie()> will act as if
+all cookies not having the configured prefix never existed, and removes the
+prefix when used in list context. C<resCookie()> will simply add the prefix to
+all outgoing cookies. Default: undef (disabled).
+
 =item db_login
 
 When using the L<TUWF::DB|TUWF::DB> functions, set this to an arrayref with

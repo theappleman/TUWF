@@ -96,6 +96,20 @@ When I<name> is not given, returns a list of all cookies names sent with the
 request, in no specific order. Otherwise, returns the value of the named
 cookie, or C<undef> if the cookie does not exist.
 
+If the L<cookie_prefix|TUWF/cookie_prefix> option is set, any cookies not
+having this prefix will not be listed when I<name> is not given. The prefix is
+removed from all cookie names listed, and I<name> should not have this prefix.
+For example:
+
+  # at initialization
+  TUWF::set(cookie_prefix => 'ex_');
+  
+  # ...later, when processing a request,
+  my $auth = $self->reqCookie('auth');  # actually means 'ex_auth'
+  
+  # when assuming the 'ex_auth' cookie to be present,
+  my @cookies = $self->reqCookie();     # @cookies = ('auth')
+
 =head2 reqMethod()
 
 Returns the HTTP request method. Can be either C<HEAD>, C<GET> or C<POST>.

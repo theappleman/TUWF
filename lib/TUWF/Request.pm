@@ -23,7 +23,7 @@ sub reqInit {
       if ($ENV{REQUEST_URI}||'') =~ /\?/;
   }
 
-  $self->{_TUWF}{Req}{Cookies} = _parse_cookies($ENV{HTTP_COOKIE} || $ENV{COOKIE});
+  $self->{_TUWF}{Req}{Cookies} = _parse_cookies($self, $ENV{HTTP_COOKIE} || $ENV{COOKIE});
   $self->{_TUWF}{Req}{GET} = _parse_urlencoded($ENV{QUERY_STRING});
 
   my $meth = $self->reqMethod;
@@ -119,7 +119,7 @@ sub _parse_multipart {
 
 
 sub _parse_cookies {
-  my $str = shift;
+  my($self, $str) = @_;
   return {} if !$str;
 
   my %dat;
@@ -131,7 +131,9 @@ sub _parse_cookies {
     s/^ +//;
     s/ +$//;
     next if !$_ || !m{^([^\(\)<>@,;:\\"/\[\]\?=\{\}\t\s]+)=("?)(.*)\2$};
-    $dat{$1} = $3 if !exists $dat{$1};
+    my($n, $v) = ($1, $3);
+    next if $self->{_TUWF}{cookie_prefix} && !s/^\Q$self->{_TUWF}{cookie_prefix}\E//;
+    $dat{$n} = $v if !exists $dat{$n};
   }
   return \%dat;
 }
