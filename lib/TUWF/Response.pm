@@ -9,7 +9,7 @@ use POSIX 'strftime';
 
 
 our @EXPORT = qw|
-  resInit resHeader resBuffer resFd resStatus resRedirect resFinish
+  resInit resHeader resCookie resBuffer resFd resStatus resRedirect resNotFound resFinish
 |;
 
 
