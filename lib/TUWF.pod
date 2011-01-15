@@ -152,10 +152,10 @@ C<@INC>.
 
   # make sure the website modules are available from @INC
   use lib 'mylib';
-
+  
   # load mylib/MyWebsite/HomePage.pm
   TUWF::load('MyWebsite::HomePage');
-
+  
   # load two other modules
   TUWF::load('MyWebsite::Forum', 'MyUtilities');
 
@@ -192,7 +192,7 @@ additional arguments.
     # empty regex = root URI (/)
     # myhomepage() will be called with the main TUWF object
     qr{}  => \&myhomepage,
-
+  
     # The following will match on any /user/<numeric-id> URI.
     # userpage() will be called with
     # - the TUWF object and
@@ -211,6 +211,20 @@ Set TUWF configuration variables.
 Set the default output encoding. Supported values are I<none>, I<gzip>,
 I<deflate>, I<auto>. See L<TUWF::Response|TUWF::Response> for more information.
 Default: auto.
+
+=item cookie_defaults
+
+When set to a hashref, will be used as the default options to
+L<TUWF::Response|resCookie>. These options can still be overruled by each
+individual call to C<resCookie()>. This can be useful when globally setting the
+cookie domain:
+
+  $self->set(cookie_defaults => { domain => '.example.org' });
+  $self->resCookie(foo => 'bar');
+  
+  # is equivalent to:
+  $self->resCookie(foo => 'bar', domain => '.example.org');
+  # for each call to resCookie()
 
 =item db_login
 
