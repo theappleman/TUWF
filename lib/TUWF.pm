@@ -190,7 +190,7 @@ sub _handle_request {
     $self->dbCheck() if $self->{_TUWF}{db_login};
 
     # call pre request handler, if any
-    $self->{_TUWF}{pre_request_handler}->($self) if $self->{_TUWF}{pre_request_handler};
+    return 1 if $self->{_TUWF}{pre_request_handler} && !$self->{_TUWF}{pre_request_handler}->($self);
 
     # find the handler
     my $loc = $self->reqPath;

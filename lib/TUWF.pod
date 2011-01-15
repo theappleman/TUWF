@@ -294,9 +294,12 @@ memory. Set to 0 to disable this limit. Default: 10MB.
 =item pre_request_handler
 
 Set to a subroutine reference if you want to perform some actions before TUWF
-calls your URI handling function. This callback is often used for initializing
-or resetting request-specific data, and parsing cookies or other request data to
-set preferences or session information.
+calls your URI handling function. The subroutine B<must> return a true value to
+indicate that TUWF can continue processing the request as usual. If the
+subroutine returns false, TUWF will assume the subroutine has generated a
+response and will halt any further processing. This callback is often used
+for initializing or resetting request-specific data, and parsing cookies or
+other request data to set preferences or session information.
 
 =item post_request_handler
 
