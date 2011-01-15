@@ -189,7 +189,7 @@ sub resFinish {
     for (0..$#{$i->{headers}}/2);
   printf "Set-Cookie: %s\r\n", $i->{cookies}{$_} for (keys %{$i->{cookies}});
   print  "\r\n";
-  print  $i->{content};
+  print  $i->{content} if $self->reqMethod() ne 'HEAD';
 
   # free the memory used for the reponse data
   $self->resInit;
