@@ -175,10 +175,10 @@ sub resRedirect {
 }
 
 
-# Tells TUWF to call the 404 generation handler
 sub resNotFound {
   my $self = shift;
-  $self->{_TUWF}{Res}{404} = 1;
+  $self->resInit;
+  $self->{_TUWF}{error_404_handler}->($self);
 }
 
 

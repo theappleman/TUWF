@@ -208,9 +208,6 @@ sub _handle_request {
     # execute handler
     $han->($self, @args);
 
-    # give 404 page if resNotFound() is called (and not reset with resInit())
-    $self->{_TUWF}{error_404_handler}->($self) if $self->{_TUWF}{Res}{404} && $han != $self->{_TUWF}{error_404_handler};
-
     # execute post request handler, if any
     $self->{_TUWF}{post_request_handler}->($self) if $self->{_TUWF}{post_request_handler};
 
