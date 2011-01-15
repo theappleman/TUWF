@@ -12,6 +12,10 @@ our @EXPORT = qw|
 |;
 
 
+# try to load PerlIO::gzip, resBuffer will check for its availability
+eval { require PerlIO::gzip; };
+
+
 # Initialises response data and resets all headers and content to their
 # defaults. This method can be called mutliple times per request to clear
 # any previous changes and to create a new response.
@@ -26,9 +30,6 @@ sub resInit {
     ],
     content => '',
   };
-
-  # try to load PerlIO::gzip, resBuffer will check for its availability
-  eval { require PerlIO::gzip; };
 
   # open output buffer
   $self->resBuffer($self->{_TUWF}{content_encoding}||'auto');
@@ -145,6 +146,13 @@ sub resRedirect {
   print $fd 'Redirecting...';
   $self->resHeader('Location' => $self->reqBaseURI().$url);
   $self->resStatus(!$type ? 301 : $type eq 'temp' ? 307 : 303);
+}
+
+
+# Tells TUWF to call the 404 generation handler
+sub resNotFound {
+  my $self = shift;
+  $self->{_TUWF}{Res}{404} = 1;
 }
 
 

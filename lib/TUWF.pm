@@ -206,13 +206,10 @@ sub _handle_request {
     }
 
     # execute handler
-    my $ret = $han->($self, @args);
+    $han->($self, @args);
 
-    # give 404 page if the handler returned 404...
-    if($ret && $ret eq '404') {
-      $ret = $self->{_TUWF}{error_404_handler}->($self) if $han ne $self->{_TUWF}{error_404_handler};
-      TUWF::_error_404($self) if $ret && $ret eq '404';
-    }
+    # give 404 page if resNotFound() is called (and not reset with resInit())
+    $self->{_TUWF}{error_404_handler}->($self) if $self->{_TUWF}{Res}{404} && $han != $self->{_TUWF}{error_404_handler};
 
     # execute post request handler, if any
     $self->{_TUWF}{post_request_handler}->($self) if $self->{_TUWF}{post_request_handler};
