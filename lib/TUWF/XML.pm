@@ -47,6 +47,23 @@ BEGIN {
 };
 
 
+# the common XHTML doctypes, from http://www.w3.org/QA/2002/04/valid-dtd-list.html
+my %doctypes = split /\r?\n/, <<__;
+xhtml1-strict
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+xhtml1-transitional
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+xhtml1-frameset
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+xhtml11
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+xhtml-basic11
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN" "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">
+xhtml-math-svg
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN" "http://www.w3.org/2002/04/xhtml-math-svg/xhtml-math-svg.dtd">
+__
+
+
 sub new {
   my($pack, %o) = @_;
   $o{write} ||= sub { print @_ };
@@ -141,15 +158,17 @@ sub end {
 }
 
 
-# Special function, this writes the XHTML 1.0 Strict doctype
-# (other doctypes aren't supported at the moment)
-sub html() {
+sub html {
   my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
-  $s->lit(qq|<!DOCTYPE html
-  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">|);
-  push @{$s->{stack}}, 'html';
+  my %o = @_;
+
+  $s->lit($doctypes{ delete($o{doctype}) || 'xhtml1-strict' }."\n");
+  my $lang = delete $o{lang};
+  $s->tag('html',
+    xmlns => 'http://www.w3.org/1999/xhtml',
+    $lang ? ('xml:lang' => $lang, lang => $lang) : (),
+    %o
+  );
 }
 
 

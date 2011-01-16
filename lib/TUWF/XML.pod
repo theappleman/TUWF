@@ -5,15 +5,16 @@ TUWF::XML - Easy XML and HTML generation with Perl
 =head1 DESCRIPTION
 
 This module provides an easy and simple method for generating XML (and with
-that, HTML) data in Perl. Unlike most other TUWF modules, this one can be used
-separately, outside of the TUWF framework.
+that, HTML) documents in Perl. Unlike most other TUWF modules, this one can be
+used separately, outside of the TUWF framework.
 
 The goal of this module is to make HTML generation B<easier>, it is certainly
 not a goal to abstract HTML generation behind generalized functions and
 objects. Nor is it a goal to ensure the correctness of the generated HTML, that
-remains the responsibility of the programmer. You will still be writing HTML
-yourself, the only difference is that you use a more convenient syntax and you
-won't have to manually escape everything you output.
+remains the responsibility of the programmer (although this module can
+certainly help). You will still be writing HTML yourself, the only difference
+is that you use a more convenient syntax and you won't have to manually escape
+everything you output.
 
 The primary aim of this module was to generate XHTML, and since XHTML is a
 subset of XML, extending it to write XML was a small step. In fact, this module
@@ -126,18 +127,37 @@ Writes the following XML header:
 
 Since this function does not open a tag, it does not have to be C<end()>'ed.
 
-=head2 html()
+=head2 html(options)
 
-Writes the following XHTML 1.0 Strict header:
+Writes an XHTML doctype and opens an C<E<lt>htmlE<gt>> tag. Accepts the
+following options:
 
-  <!DOCTYPE html
-    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-  <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+=over
 
-Since this opens an <html> tag, it should be closed with an C<end()>.
+=item doctype
 
-I<TODO: This function is extremely specific, header should be configurable.>
+Specify the doctype to use. Can be one of the following:
+
+  xhtml1-strict xhtml1-transitional xhtml1-frameset
+  xhtml11 xhtml-basic11 xhtml-math-svg
+
+These refer to the doctypes found at
+L<http://www.w3.org/QA/2002/04/valid-dtd-list.html>. Default: xhtml1-strict.
+
+=item lang
+
+Specifies the (human) language of the generated content. This will generate a
+C<lang> and C<xml:lang> attribute for the html open tag.
+
+=item I<anything else>
+
+Any option besides I<doctype> and I<lang> is added as attribute to html open
+tag.
+
+=back
+
+Since this opens an C<E<lt>htmlE<gt>> tag, it should be closed with an
+C<end()>.
 
 =head2 tag(name, attribute => value, .., contents)
 
