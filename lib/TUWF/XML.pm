@@ -16,15 +16,15 @@ our(@EXPORT_OK, %EXPORT_TAGS, @htmltags, @htmlexport, @xmlexport, %htmlbool, $OB
 BEGIN {
   # xhtml 1.0 tags
   @htmltags = qw|
-    address blockquote div dl fieldset form h1 h2 h3 h4 h5 h6 noscript ol p pre ul
-    a abbr acronym b bdo big br button cite code dfn em i img input kbd label Map
-    object q samp Select small span strong Sub sup textarea tt var caption col
-    colgroup table tbody td tfoot th thead Tr area base body dd del dt head ins
-    legend li Link meta optgroup option param script style title
+    a abbr acronym address area b base bdo big blockquote body br button caption
+    cite code col colgroup dd del dfn div dl dt em fieldset form h1 h2 h3 h4 h5 h6
+    head i img input ins kbd label legend li Link Map meta noscript object ol
+    optgroup option p param pre q samp script Select small span strong style Sub
+    sup table tbody td textarea tfoot th thead title Tr tt ul var
   |;
 
   # boolean (self-closing) tags
-  %htmlbool = map +($_,1), qw| hr br img input area base frame link param |;
+  %htmlbool = map +($_,1), qw| area base br img input Link param |;
 
   # functions to export
   @htmlexport = (@htmltags, qw| html lit txt tag end |);
@@ -35,7 +35,7 @@ BEGIN {
   for my $e (@htmltags) {
     *{__PACKAGE__."::$e"} = sub {
       my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
-      $s->tag(lc($e), @_, $htmlbool{lc($e)} && $#_%2 ? undef : ());
+      $s->tag(lc($e), @_, $htmlbool{$e} && $#_%2 ? undef : ());
     }
   }
 
@@ -107,13 +107,13 @@ sub txt {
 sub tag {
   my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
   my $name = shift;
-  croak "Invalid XML tag name" if !$name || $name =~ /^(xml|[^a-z])/i || $name =~ / /;
+  croak "Invalid XML tag name" if !$name || $name =~ /^[^a-z]/i || $name =~ / /;
 
   my $t = $s->{pretty} ? "\n".(' 'x(@{$s->{stack}}*$s->{pretty})) : '';
   $t .= '<'.$name;
   while(@_ > 1) {
     my $attr = shift;
-    croak "Invalid XML attribute name" if !$attr || $attr =~ /^(xml|[^a-z])/i || $attr =~ / /;
+    croak "Invalid XML attribute name" if !$attr || $attr =~ /^[^a-z]/i || $attr =~ / /;
     $t .= qq{ $attr="}.xml_escape(shift).'"';
   }
 
