@@ -19,7 +19,7 @@ sub dbInit {
       PrintError => 0, RaiseError => 1, AutoCommit => 0,
       mysql_enable_utf8 => 1, # DBD::mysql
       pg_enable_utf8    => 1, # DBD::Pg
-      unicode           => 1, # DBD::sqlite
+      sqlite_unicode    => 1, # DBD::SQLite
     }),
     queries => [],
   };
