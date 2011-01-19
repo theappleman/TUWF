@@ -238,8 +238,23 @@ all outgoing cookies. Default: undef (disabled).
 
 =item db_login
 
-When using the L<TUWF::DB|TUWF::DB> functions, set this to an arrayref with
-three elements, containing the first three arguments to C<DBI::connect()>.
+Sets the login information for the L<TUWF::DB|TUWF::DB> functions. Can be set
+to either an arrayref or a subroutine reference.
+
+In the case of an arrayref, the array should have three elements, containing
+the first three arguments to C<DBI::connect()>. Do not include the last options
+argument, TUWF will set the appropriate options itself. When necessary,
+however, it is still possible to set options using the DSN string itself, see
+the L<DBI|DBI> documentation for more information.
+
+When setting this to a subroutine reference, the subroutine will be called when
+connecting to the database with the main TUWF object as only argument. The
+subroutine is expected to return a DBI instance. It is the responsibility of
+the subroutine to set the correct DBI options. In particular, it is important
+to have I<RaiseError> enabled and I<AutoCommit> disabled. It is also
+recommended to enable unicode support if your database driver has such an
+option.
+
 Default: undef (disabled).
 
 =item debug

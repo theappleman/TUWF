@@ -3,6 +3,7 @@ package TUWF::DB;
 
 use strict;
 use warnings;
+use Carp 'croak';
 
 use Exporter 'import';
 our @EXPORT = qw|
@@ -14,14 +15,24 @@ our @EXPORT_OK = ('sqlprint');
 
 sub dbInit {
   my $self = shift;
-  require DBI;
-  $self->{_TUWF}{DB} = {
-    sql => DBI->connect(@{$self->{_TUWF}{db_login}}, {
+  my $login = $self->{_TUWF}{db_login};
+  my $sql;
+  if(ref($login) eq 'CODE') {
+    $sql = $login->($self);
+    croak 'db_login subroutine did not return a DBI instance.' if !ref($sql) || !$sql->isa('DBI::db');
+  } elsif(ref($login) eq 'ARRAY' && @$login == 3) {
+    $sql = DBI->connect(@$login, {
       PrintError => 0, RaiseError => 1, AutoCommit => 0,
       mysql_enable_utf8 => 1, # DBD::mysql
       pg_enable_utf8    => 1, # DBD::Pg
       sqlite_unicode    => 1, # DBD::SQLite
-    }),
+    });
+  } else {
+    croak 'Invalid value for the db_login setting.';
+  }
+
+  $self->{_TUWF}{DB} = {
+    sql => $sql,
     queries => [],
   };
 }
