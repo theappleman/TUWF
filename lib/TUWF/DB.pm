@@ -7,7 +7,7 @@ use Carp 'croak';
 
 use Exporter 'import';
 our @EXPORT = qw|
-  dbInit dbCheck dbDisconnect dbCommit dbRollBack
+  dbInit dbh dbCheck dbDisconnect dbCommit dbRollBack
   dbExec dbRow dbAll dbPage
 |;
 our @EXPORT_OK = ('sqlprint');
