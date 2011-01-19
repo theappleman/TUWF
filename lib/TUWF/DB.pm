@@ -26,6 +26,11 @@ sub dbInit {
 }
 
 
+sub dbh {
+  return shift->{_TUWF}{DB}{sql};
+}
+
+
 sub dbCheck {
   my $self = shift;
   my $info = $self->{_TUWF}{DB};
