@@ -123,12 +123,11 @@ sub sqlhelper { # type, query, @list
   my $sqlq = shift;
   my $s = $self->{_TUWF}{DB}{sql};
 
-  my $start = [Time::HiRes::gettimeofday()] if $self->debug || $self->{_TUWF}{log_slow_pages};
+  my $start = [Time::HiRes::gettimeofday()] if $self->debug || $self->{_TUWF}{log_slow_pages} || $self->{_TUWF}{log_queries};
 
   $sqlq =~ s/\r?\n/ /g;
   $sqlq =~ s/  +/ /g;
   my(@q) = @_ ? sqlprint($sqlq, @_) : ($sqlq);
-  $self->log($q[0].' | '.join(', ', map defined($_)?"'$_'":'NULL', @q[1..$#q])) if $self->{_TUWF}{log_queries};
 
   my($q, $r);
   my $ret = eval {
@@ -141,10 +140,18 @@ sub sqlhelper { # type, query, @list
     1;
   };
 
+  # count and log, if requested
+  my $itv = Time::HiRes::tv_interval($start) if $self->debug || $self->{_TUWF}{log_slow_pages} || $self->{_TUWF}{log_queries};
+
+  $self->log(sprintf '[%7.2ms] %s | %s',
+    $q[0], $itv*1000,
+    join(', ', map defined($_)?"'$_'":'NULL', @q[1..$#q])
+  ) if $self->{_TUWF}{log_queries};
+
+  push(@{$self->{_TUWF}{DB}{queries}}, [ \@q,  ]) if $self->debug || $self->{_TUWF}{log_slow_pages};
+
   # re-throw the error in the context of the calling code
   croak $s->errstr if !$ret;
-
-  push(@{$self->{_TUWF}{DB}{queries}}, [ \@q, Time::HiRes::tv_interval($start) ]) if $self->debug || $self->{_TUWF}{log_slow_pages};
 
   $r = 0  if $type == 0 && (!$r || $r == 0);
   $r = {} if $type == 1 && (!$r || ref($r) ne 'HASH');
