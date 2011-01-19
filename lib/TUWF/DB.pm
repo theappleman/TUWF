@@ -130,12 +130,19 @@ sub sqlhelper { # type, query, @list
   my(@q) = @_ ? sqlprint($sqlq, @_) : ($sqlq);
   $self->log($q[0].' | '.join(', ', map defined($_)?"'$_'":'NULL', @q[1..$#q])) if $self->{_TUWF}{log_queries};
 
-  my $q = $s->prepare($q[0]);
-  $q->execute($#q ? @q[1..$#q] : ());
-  my $r = $type == 1 ? $q->fetchrow_hashref :
-          $type == 2 ? $q->fetchall_arrayref({}) :
-                       $q->rows;
-  $q->finish();
+  my($q, $r);
+  my $ret = eval {
+    $q = $s->prepare($q[0]);
+    $q->execute($#q ? @q[1..$#q] : ());
+    $r = $type == 1 ? $q->fetchrow_hashref :
+         $type == 2 ? $q->fetchall_arrayref({}) :
+                      $q->rows;
+    $q->finish();
+    1;
+  };
+
+  # re-throw the error in the context of the calling code
+  croak $s->errstr if !$ret;
 
   push(@{$self->{_TUWF}{DB}{queries}}, [ \@q, Time::HiRes::tv_interval($start) ]) if $self->debug || $self->{_TUWF}{log_slow_pages};
 
