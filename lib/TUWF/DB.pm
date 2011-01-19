@@ -3,7 +3,6 @@ package TUWF::DB;
 
 use strict;
 use warnings;
-use DBI;
 
 use Exporter 'import';
 our @EXPORT = qw|
@@ -15,6 +14,7 @@ our @EXPORT_OK = ('sqlprint');
 
 sub dbInit {
   my $self = shift;
+  require DBI;
   $self->{_TUWF}{DB} = {
     sql => DBI->connect(@{$self->{_TUWF}{db_login}}, {
       PrintError => 0, RaiseError => 1, AutoCommit => 0,
