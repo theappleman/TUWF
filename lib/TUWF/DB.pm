@@ -111,7 +111,7 @@ sub sqlhelper { # type, query, @list
   $sqlq =~ s/\r?\n/ /g;
   $sqlq =~ s/  +/ /g;
   my(@q) = @_ ? sqlprint($sqlq, @_) : ($sqlq);
-  $self->log($q[0].' | "'.join('", "', @q[1..$#q]).'"') if $self->{_TUWF}{log_queries};
+  $self->log($q[0].' | '.join(', ', map defined($_)?"'$_'":'NULL', @q[1..$#q])) if $self->{_TUWF}{log_queries};
 
   my $q = $s->prepare($q[0]);
   $q->execute($#q ? @q[1..$#q] : ());
