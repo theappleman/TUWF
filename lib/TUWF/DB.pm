@@ -10,6 +10,7 @@ our @EXPORT = qw|
   dbInit dbCheck dbDisconnect dbCommit dbRollBack
   dbExec dbRow dbAll dbPage
 |;
+our @EXPORT_OK = ('sqlprint');
 
 
 sub dbInit {
@@ -143,7 +144,6 @@ sub sqlhelper { # type, query, @list
 #   !s   the classic sprintf %s, use with care
 # This isn't sprintf, so all other things won't work,
 # Only the ? placeholder is supported, so no dollar sign numbers or named placeholders
-# Indeed, this also means you can't use PgSQL operators containing a question mark
 
 sub sqlprint { # query, bind values. Returns new query + bind values
   my @a;
