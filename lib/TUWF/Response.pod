@@ -47,8 +47,9 @@ The default headers (as set by C<reqInit()>) are:
   Content-Type: text/html; charset=UTF-8
   X-Powered-By: Perl-TUWF
 
-A C<Content-Encoding> header may be set by C<resBuffer()>. C<Set-Cookie>
-headers set by C<reqCookie()> are not manipulated through this function.
+A C<Content-Encoding> header may be set by C<resBuffer()>. A C<Content-Length>
+header is added automatically when the response is sent. C<Set-Cookie> headers
+set by C<resCookie()> are not manipulated through this function.
 
 TIP: When setting the C<Content-Type> header to a textual type, do not forget
 to indicate that the charset is UTF-8.
@@ -147,7 +148,9 @@ this filehandle, meaning that everything you write to it should be in Perls
 native unicode format. It is a bad idea to use this filehandle for anything
 other than writing. It is important to remember that this filehandle writes to
 a B<buffer>, and its contents will not be flushed before the request has been
-fully processed.
+fully processed. Since C<resBuffer()> creates a new filehandle each time it is
+called, the return value of C<resFd()> is invalid after a call to
+C<resBuffer()>.
 
 You rarely have to use this filehandle directly.  L<TUWF::XML|TUWF::XML>
 provides a more convenient set of functions, including C<lit()>, which can be

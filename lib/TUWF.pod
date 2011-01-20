@@ -4,9 +4,9 @@ TUWF - The Ultimate Website Framework
 
 =head1 DESCRIPTION
 
-TUWF is a (relatively) small framework designed for writing websites. It
-provides an abstraction layer to various environment-specific tasks and has
-common functions to ease the creation of both small and large websites.
+TUWF is a small framework designed for writing websites. It provides an
+abstraction layer to various environment-specific tasks and has common
+functions to ease the creation of both small and large websites.
 
 
 =head2 Main features and limitations
@@ -16,6 +16,56 @@ to every problem. This section introduces you to some main features and
 limitations you will want to know about before using TUWF.
 
 =over
+
+=item TUWF is small.
+
+I have seen many frameworks being advertised as "small" or "minimal", yet they
+either require loads of dependencies or are not small at all. TUWF, on the
+other hand, B<is> quite small. Its total codebase is significantly smaller than
+the primary code of CGI.pm, and TUWF requires absolutely no extra dependencies
+to run.
+
+Some optional features, however, do require extra modules. In order to run TUWF
+in a FastCGI environment, the L<FCGI|FCGI> module is required. The
+L<TUWF::DB|TUWF::DB> methods require L<DBI|DBI>, and
+L<PerlIO::gzip|PerlIO::gzip> is required when you want to enable content
+encoding.
+
+=item The generated response is buffered.
+
+This allows you to change the response completely while generating an other
+one, which is extremely useful if your code decides to throw an error while a
+part of the response has already been generated. In such a case your visitor
+will properly see your error page and not some messed up page that does not
+make sense. Thanks to this buffering, you will also be able to set cookies and
+send other headers B<after> generating the contents of the page.  And as an
+added bonus, your pages will be compressed more efficiently when output
+compression is enabled.
+
+On the other hand, this means that you can't use TUWF for applications that
+require streaming dynamic content (e.g. a chat application), and you may get
+into memory issues when sending large files.
+
+=item Everything is UTF-8.
+
+All TUWF functions (with some exceptions) will only accept and return Unicode
+strings in Perls native encoding. All incoming data is assumed to be encoded in
+UTF-8 and all outgoing data will be encoded in UTF-8. This is generally what
+you want when developing new applications. If, for some very strange reason,
+you want all I/O with the browser to be in anything other than UTF-8, you won't
+be able to use TUWF. It B<is> possible to use external resources which use
+other encodings, but you will have to C<decode()> that into Perls native
+encoding before passing it to any TUWF function.
+
+=item Designed for CGI and FastCGI environments.
+
+TUWF is designed to be run in CGI and FastCGI environments, and has been
+optimized for FastCGI. That is, all modules will be pre-loaded at
+initialization.
+
+Due to the singleton design of TUWF, you should avoid running TUWF websites in
+persistent environments that allow multiple websites to share the same process,
+such as mod_perl.
 
 =item One (sub)domain is one website.
 
@@ -47,32 +97,6 @@ I<wiki.example.com> to be a wiki, you will want to avoid programming both
 subdomains in the same TUWF script. A common solution is to write a separate
 script for each subdomain. It is still possible to share code among both sites
 by means of modules.
-
-=item The generated response is buffered.
-
-This means that you can't use TUWF for applications that require streaming
-dynamic content (e.g. a chat application), and you may get into memory issues
-when sending large files.
-
-On the other hand, this does allow you to change the response completely while
-generating an other one, which is extremely useful if your code decides to
-throw an error while a part of the response has already been generated. In such
-a case your visitor will properly see your error page and not some messed up
-page that does not make sense. Thanks to this buffering, you will also be able
-to set cookies and send other headers B<after> generating the contents of the
-page.  And as an added bonus, your pages will be compressed more efficiently
-when output compression is enabled.
-
-=item Everything is UTF-8
-
-All TUWF functions (with some exceptions) will only accept and return Unicode
-strings in Perls native encoding. All incoming data is assumed to be encoded in
-UTF-8 and all outgoing data will be encoded in UTF-8. This is generally what
-you want when developing new applications. If, for some very strange reason,
-you want all I/O with the browser to be in anything other than UTF-8, you won't
-be able to use TUWF. It B<is> possible to use external resources which use
-other encodings, but you will have to C<decode()> that into Perls native
-encoding before giving it to any TUWF function.
 
 =back
 
@@ -114,7 +138,7 @@ export functions; These functions are automatically imported in the
 C<TUWF::Object> namespace and can be used as methods of the TUWF object. This
 allows for an easy method to split the functionality of your website among
 different functions and files, without having to constantly load and import
-your utility modules in each other module that uses them.
+your utility modules in each file that uses them.
 
 Of course, with all exported functions being imported into a single namespace,
 this does call for some function naming conventions to avoid function name
@@ -215,7 +239,7 @@ Default: auto.
 =item cookie_defaults
 
 When set to a hashref, will be used as the default options to
-L<TUWF::Response|resCookie>. These options can still be overruled by each
+L<resCookie()|TUWF::Response>. These options can still be overruled by each
 individual call to C<resCookie()>. This can be useful when globally setting the
 cookie domain:
 
@@ -248,7 +272,7 @@ however, it is still possible to set options using the DSN string itself, see
 the L<DBI|DBI> documentation for more information.
 
 When setting this to a subroutine reference, the subroutine will be called when
-connecting to the database with the main TUWF object as only argument. The
+connecting to the database, with the main TUWF object as only argument. The
 subroutine is expected to return a DBI instance. It is the responsibility of
 the subroutine to set the correct DBI options. In particular, it is important
 to have I<RaiseError> enabled and I<AutoCommit> disabled. It is also
