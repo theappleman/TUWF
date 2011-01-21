@@ -15,6 +15,7 @@ our @EXPORT_OK = ('sqlprint');
 
 sub dbInit {
   my $self = shift;
+  require DBI;
   my $login = $self->{_TUWF}{db_login};
   my $sql;
   if(ref($login) eq 'CODE') {
@@ -143,10 +144,8 @@ sub sqlhelper { # type, query, @list
   # count and log, if requested
   my $itv = Time::HiRes::tv_interval($start) if $self->debug || $self->{_TUWF}{log_slow_pages} || $self->{_TUWF}{log_queries};
 
-  $self->log(sprintf '[%7.2ms] %s | %s',
-    $q[0], $itv*1000,
-    join(', ', map defined($_)?"'$_'":'NULL', @q[1..$#q])
-  ) if $self->{_TUWF}{log_queries};
+  $self->log(sprintf '[%7.2ms] %s | %s', $q[0], $itv*1000, DBI::neat_list([@q[1..$#q]]))
+    if $self->{_TUWF}{log_queries};
 
   push(@{$self->{_TUWF}{DB}{queries}}, [ \@q,  ]) if $self->debug || $self->{_TUWF}{log_slow_pages};
 
