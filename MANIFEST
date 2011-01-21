@@ -8,6 +8,7 @@ examples/xml.pl
 lib/TUWF.pm
 lib/TUWF.pod
 lib/TUWF/DB.pm
+lib/TUWF/DB.pod
 lib/TUWF/Misc.pm
 lib/TUWF/Request.pm
 lib/TUWF/Request.pod

@@ -269,7 +269,9 @@ In the case of an arrayref, the array should have three elements, containing
 the first three arguments to C<DBI::connect()>. Do not include the last options
 argument, TUWF will set the appropriate options itself. When necessary,
 however, it is still possible to set options using the DSN string itself, see
-the L<DBI|DBI> documentation for more information.
+the L<DBI|DBI> documentation for more information. C<TUWF::DB> will
+automatically enable the unicode/utf8 flag for C<DBD::mysql>, C<DBD::Pg> and
+C<DBD::SQLite>.
 
 When setting this to a subroutine reference, the subroutine will be called when
 connecting to the database, with the main TUWF object as only argument. The
