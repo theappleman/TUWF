@@ -243,30 +243,30 @@ sub reqHeader {
 
 # returns the path part of the current URI, excluding the leading slash
 sub reqPath {
-  (my $u = $ENV{REQUEST_URI}) =~ s{^/+}{};
+  (my $u = ($ENV{REQUEST_URI}||'')) =~ s{^/+}{};
   return decode_utf8 $u;
 }
 
 
 # returns base URI, excluding trailing slash
 sub reqBaseURI {
-  return decode_utf8 ($ENV{HTTPS} ? 'https://' : 'http://').$ENV{HTTP_HOST};
+  return decode_utf8($ENV{HTTPS} ? 'https://' : 'http://').shift->reqHost();
 }
 
 
 sub reqURI {
   my $s = shift;
-  return $s->reqBaseURI().decode_utf8($ENV{REQUEST_URI}.($ENV{QUERY_STRING} ? '?'.$ENV{QUERY_STRING} : ''));
+  return $s->reqBaseURI().'/'.$s->reqPath().decode_utf8($ENV{QUERY_STRING} ? '?'.$ENV{QUERY_STRING} : '');
 }
 
 
 sub reqHost {
-  return decode_utf8 $ENV{HTTP_HOST};
+  return decode_utf8 $ENV{HTTP_HOST}||'localhost';
 }
 
 
 sub reqIP {
-  return decode_utf8 $ENV{REMOTE_ADDR};
+  return decode_utf8 $ENV{REMOTE_ADDR}||'0.0.0.0';
 }
 
 
