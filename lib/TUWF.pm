@@ -6,7 +6,6 @@ package TUWF;
 use strict;
 use warnings;
 use Carp 'croak';
-use TUWF::XML;
 
 # Store the object in a global variable for some functions that don't get it
 # passed as an argument. This will break when:
@@ -34,8 +33,8 @@ sub import {
   my $self = shift;
   my $pack = caller();
 
-  # load and import TUWF::XML when requested
-  croak $@ if @_ && !eval "package $pack; use TUWF::XML qw|@_|; 1";
+  # import requested functions from TUWF submodules
+  croak $@ if @_ && !eval "package $pack; import TUWF::func \@_; 1";
 }
 
 
@@ -138,6 +137,31 @@ sub _very_simple_page {
 __
 }
 
+
+
+# A 'redirection' namespace for all functions exported by TUWF submodules.
+# This trick avoids having to write our own sophisticated import() function
+package TUWF::func;
+
+use Exporter 'import';
+
+# don't 'use' the submodules, since they may export TUWF object methods by
+# default. We're only interested in their non-method functions, which are all
+# in @EXPORT_OK.
+BEGIN {
+  require TUWF::DB;
+  require TUWF::Misc;
+  require TUWF::XML;
+  import TUWF::DB   @TUWF::DB::EXPORT_OK;
+  import TUWF::Misc @TUWF::Misc::EXPORT_OK;
+  import TUWF::XML  @TUWF::XML::EXPORT_OK;
+}
+our @EXPORT_OK = (
+  @TUWF::DB::EXPORT_OK,
+  @TUWF::Misc::EXPORT_OK,
+  @TUWF::XML::EXPORT_OK
+);
+our %EXPORT_TAGS = %TUWF::XML::EXPORT_TAGS;
 
 
 
