@@ -21,20 +21,10 @@ TUWF - The Ultimate Website Framework
 
   Notes on usage
 
-    The documentation is still quite lacking, check examples/ for some examples
-    and read the source code for more information.
-
     The API of this module is in flux, and I am not one to care much about
     backwards compatibility. If you decide to use TUWF, either get one version
     and stick to that, or be sure to read all commit messages if you want to
     stay up-to-date.
-
-
-  TODO
-
-    * Documentation!
-    * Improve SQL abstraction
-    * Improve data validation
 
 
   Contact
