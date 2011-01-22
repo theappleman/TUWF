@@ -7,11 +7,19 @@ use strict;
 use warnings;
 use Carp 'croak';
 use Exporter 'import';
+use Encode 'encode_utf8';
 use Scalar::Util 'looks_like_number';
 
 
 our @EXPORT = ('formValidate', 'mail');
-our @EXPORT_OK = ('kv_validate');
+our @EXPORT_OK = ('uri_escape', 'kv_validate');
+
+
+sub uri_escape {
+  local $_ = encode_utf8 shift;
+  s/([^A-Za-z0-9._~-])/sprintf '%%%02X', ord $1/eg;
+  return $_;
+}
 
 
 sub kv_validate {
