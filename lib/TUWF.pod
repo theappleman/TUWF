@@ -372,6 +372,10 @@ Similar to I<post_request_handler>, except it will be called after the request
 has been processed but before it has been sent to the client. This callback
 will not be called if any of the functions before threw an exception.
 
+=item validate_templates
+
+I<Documentation pending.>
+
 =item xml_pretty
 
 Passed to the I<pretty> option of C<TUWF::XML-E<gt>new()>. See

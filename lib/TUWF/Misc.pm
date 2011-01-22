@@ -5,76 +5,41 @@ package TUWF::Misc;
 
 use strict;
 use warnings;
+use Carp 'croak';
 use Exporter 'import';
+use Scalar::Util 'looks_like_number';
 
 
-our @EXPORT = ('mail', 'formValidate');
+our @EXPORT = ('formValidate', 'mail');
+our @EXPORT_OK = ('kv_validate');
 
 
-# Some pre-defined templates. It's possible to add templates at any time
-# and from any file by executing something like:
-#  $TUWF::Misc::templates{templatename} = qr/regex/;
-our %templates = (
-  mail       => qr/^[^@<>]+@[^@.<>]+(?:\.[^@.<>]+)+$/,
-  url        => qr/^(http|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?$/,
-  asciiprint => qr/^[\x20-\x7E]*$/,
-  int        => qr/^-?\d+$/,
-  pname      => qr/^[a-z0-9-]*$/,
-);
-
-
-# Arguments: list of hashes representing a form item with validation rules
-#  {
-#    name       => name of the form
-#    multi      => 0/1, multiple form fields with the same name (see below)
-#    default    => value to return if the field is left empty
-#    required   => 0/1, whether this field is required, defaults to 1
-#    whitespace => 0/1, removes any whitespace around the field before
-#                  validating, also removes all occurences of \r. defaults to 1
-#    maxlength  => maximum length of the field
-#    minlength  => minimum required length
-#    enum       => [ value must be present in a set list ]
-#    template   => one of the templates as defined in %templates
-#    regex      => [ qr/ regex /, "message for the user" ]
-#    func       => [ sub { external subroutine }, "message for the user" ]
-#  }
-#
-# The subroutine passed with the func rule will receive a form value as it's
-# first argument and must return either any false value if the field doesn't
-# validate or any true value otherwise. The function is allowed to modify it's
-# first argument to change the value of the field.
-#
-# Returns a hash with form names as keys and their value as argument, and
-# a special key called '_err' in case there were errors. The value of this
-# hash item is an array of failed test cases, each represented as an array
-# with a list of: name of the field that failed validation and the rule on
-# which the validation failed (the key-value pair specified as argument)
-#
-# If the multi rule is specified, the returned value will be an arrayref
-# with the values of each item. If no fields were found with that name, the
-# arrayref will be empty. The validator will stop checking the other values
-# after one has failed.
-sub formValidate {
-  my($self, @fields) = @_;
+sub kv_validate {
+  my($sources, $templates, $params) = @_;
 
   my @err;
   my %ret;
 
-  for my $f (@fields) {
-    $f->{required}++ if not exists $f->{required};
-    $f->{whitespace}++ if not exists $f->{whitespace};
-    my @values = $f->{multi} ? $self->reqParam($f->{name}) : ( scalar $self->reqParam($f->{name}) );
-    $values[0] = '' if !@values;
+  for my $f (@$params) {
+    my $src = (grep $f->{$_}, keys %$sources)[0];
+    my @values = $sources->{$src}->($f->{$src});
+    @values = ($values[0]) if !$f->{multi};
+
+    # check each value and add it to %ret
     for (@values) {
-      my $valid = _validate($_, $f);
+      my $valid = _validate($_, $templates, $f);
       if(!ref $valid) {
         $_ = $valid;
         next;
       }
-      push @err, [ $f->{name}, $$valid, $f->{$$valid} ];
+      push @err, [ $f->{$src}, $$valid, $f->{$$valid} ];
       last;
     }
     $ret{$f->{name}} = $f->{multi} ? \@values : $values[0];
+
+    # check mincount/maxcount
+    push @err, [ $f->{$src}, 'mincount', $f->{mincount} ] if $f->{mincount} && @values < $f->{mincount};
+    push @err, [ $f->{$src}, 'maxcount', $f->{maxcount} ] if $f->{maxcount} && @values < $f->{maxcount};
   }
 
   $ret{_err} = \@err if @err;
@@ -82,38 +47,60 @@ sub formValidate {
 }
 
 
-# Internal function used by formValidate, checks one value on the validation
+# Internal function used by kv_validate, checks one value on the validation
 # rules, returns scalarref containing the failed rule on error, new value
 # otherwise
-sub _validate { # value, { rules }
-  my($v, $r) = @_;
+sub _validate { # value, \%templates, \%rules
+  my($v, $t, $r) = @_;
+
+  croak "Template $r->{template} not defined." if $r->{template} && !$t->{$r->{template}};
+  $r->{required}++ if not exists $r->{required};
+  $r->{whitespace}++ if not exists $r->{whitespace};
 
   # remove whitespace
-  if($v && $r->{whitespace}) {
+  if($v && $r->{rmwhitespace}) {
     $v =~ s/\r//g;
     $v =~ s/^[\s\n]+//;
     $v =~ s/[\s\n]+$//;
   }
 
   # empty
-  if(!$v && length $v < 1 && $v ne '0') {
+  if(length($v) < 1) {
     return \'required' if $r->{required};
-    return exists $r->{default} ? $r->{default} : undef;
+    return exists $r->{default} ? $r->{default} : $v;
   }
 
   # length
   return \'minlength' if $r->{minlength} && length $v < $r->{minlength};
   return \'maxlength' if $r->{maxlength} && length $v > $r->{maxlength};
+  # min/max
+  return \'min'       if $r->{min} && (!looks_like_number($v) || $v < $r->{min});
+  return \'max'       if $r->{max} && (!looks_like_number($v) || $v > $r->{max});
   # enum
   return \'enum'      if $r->{enum} && !grep $_ eq $v, @{$r->{enum}};
-  # template
-  return \'template'  if $r->{template} && $v !~ /$templates{$r->{template}}/;
   # regex
-  return \'regex'     if $r->{regex} && $v !~ /$r->{regex}[0]/;
+  return \'regex'     if $r->{regex} && $v !~ (ref($r->{regex}) eq 'ARRAY' ? m/$r->{regex}[0]/ : m/$r->{regex}/);
+  # template
+  return \'template'  if $r->{template} && ref($v = _validate($v, $t, $t->{$r->{template}}));
   # function
   return \'func'      if $r->{func} && !$r->{func}[0]->($v);
   # passed validation
   return $v;
+}
+
+
+
+
+sub formValidate {
+  my($self, @fields) = @_;
+  return kv_validate(
+    { post   => sub { $self->reqPost(shift)   },
+      get    => sub { $self->reqGet(shift)    },
+      param  => sub { $self->reqParam(shift)  },
+      cookie => sub { $self->reqCookie(shift) },
+    }, %{ $self->{_TUWF}{validate_templates} || {} },
+    \@fields
+  );
 }
 
 
