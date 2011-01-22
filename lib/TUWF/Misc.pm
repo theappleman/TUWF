@@ -112,8 +112,8 @@ sub mail {
   my $body = shift;
   my %hs = @_;
 
-  die "No To: specified!\n" if !$hs{To};
-  die "No Subject: specified!\n" if !$hs{Subject};
+  croak "No To: specified!\n" if !$hs{To};
+  croak "No Subject: specified!\n" if !$hs{Subject};
   $hs{'Content-Type'} ||= 'text/plain; charset=\'UTF-8\'';
   $hs{From} ||= $self->{_TUWF}{mail_from};
   $body =~ s/\r?\n/\n/g;
@@ -127,10 +127,10 @@ sub mail {
 
   if(open(my $mailer, '|-:utf8', "$self->{_TUWF}{mail_sendmail} -t -f '$hs{From}'")) {
     print $mailer $mail;
-    die "Error running sendmail ($!)"
+    croak "Error running sendmail ($!)"
       if !close($mailer);
   } else {
-    die "Error opening sendail ($!)";
+    croak "Error opening sendail ($!)";
   }
 }
 
