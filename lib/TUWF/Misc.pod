@@ -1,0 +1,66 @@
+=head1 NAME
+
+TUWF::Misc - Miscellaneous utility functions and methods for TUWF
+
+=head1 DESCRIPTION
+
+This module provides a few methods for the main TUWF object and optionally
+exports a few handy functions. The methods can be used from within any TUWF
+website without requiring any additional magic, TUWF automatically loads this
+module at initialization.
+
+The exported functions can be imported through TUWF (C<use TUWF 'uri_escape';>)
+or by using this module directly (C<use TUWF::Misc 'uri_escape';>). The latter
+form is useful if you wish to use a function outside of the TUWF framework.
+
+=head1 METHODS
+
+=head2 formValidate(@fields)
+
+I<TODO>
+
+=head2 mail(body, header => value, ..)
+
+Very simple email sending function. The C<Content-Type> header defaults to
+C<text/plain; charset='UTF-8'>, and the C<From> header to the
+L<mail_from|TUWF/mail_from> configuration setting. The mail is sent using the
+sendmail program configured with L<mail_sendmail|TUWF/mail_sendmail>, you
+should make sure both that option is correct and the server is configured to
+allow using the sendmail program to actually send mail.
+
+=head1 FUNCTIONS
+
+=head2 uri_escape(string)
+
+Percent-encodes the given string and returns a string suitable for use as a
+parameter value in a URI. The given string is assumed to be in Perls native
+unicode format, and the escaped string will have UTF-8 encoded
+percent-escaping.
+
+This function is equivalent to C<uri_escape_utf8()> provided by
+L<URI::Escape|URI::Escape>, and the C<encodeURIComponent()> function in
+JavaScript.
+
+=head2 kv_validate(sources, templates, fields)
+
+I<TODO>
+
+=head1 SEE ALSO
+
+L<TUWF>, L<URI::Escape>.
+
+=head1 COPYRIGHT
+
+Copyright (c) 2008-2011 Yoran Heling.
+
+This module is part of the TUWF framework and is free software available under
+the liberal MIT license. See the COPYING file in the TUWF distribution for the
+details.
+
+
+=head1 AUTHOR
+
+Yoran Heling <projects@yorhel.nl>
+
+=cut
+

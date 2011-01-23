@@ -98,6 +98,20 @@ subdomains in the same TUWF script. A common solution is to write a separate
 script for each subdomain. It is still possible to share code among both sites
 by means of modules.
 
+=item Backward compatibility is not guaranteed.
+
+TUWF is the result of years of evolution, from one implementation to another
+and from one design to another. The reason TUWF has become what it is now is
+because of this unconstrained evolution. Providing backward compatibility in
+many cases complicates the implementation of new ideas and may add bloat to the
+framework. For this reason, future versions of TUWF may work differently from
+older versions, and may not be backward compatible with code generated for an
+older version.
+
+When using TUWF for your project, it is adviced to get one version of TUWF and
+stick to that, until you have time to check out a later version and update your
+code to work with that one.
+
 =back
 
 
@@ -157,11 +171,33 @@ reset or re-initialize the data at the beginning of the request. The
 C<pre_request_handler> is useful for such practice.
 
 
-=head2 Loading TUWF
+=head2 Utility functions
 
-I<TODO: Explain the import arguments to 'use TUWF'>
+Besides the above mentioned methods, TUWF also provides various handy
+functions. These functions are provided by several TUWF submodules (e.g.
+L<TUWF::Misc|TUWF::Misc>) and can be imported manually through these modules.
+Check out the L<SEE ALSO|/"SEE ALSO"> below for the list of submodules.
 
+An alternative, and more convenient, approach to importing these functions into
+your code is also available: you can import functions from multiple submodules
+at once by adding their names and/or tags to the C<use TUWF;> line.
 
+The following two examples are equivalent:
+
+  # the simple approach
+  use TUWF ':xml', 'uri_escape', 'sqlprint';
+
+  # the classic approach
+  use TUWF;
+  use TUWF::XML ':xml';
+  use TUWF::Misc 'uri_escape';
+  use TUWF::DB 'sqlprint';
+
+The first C<use TUWF;> line of the classic approach is not required if all you
+need is to import the functions. Omitting this line from your main website
+script, however, will cause the main TUWF code to not be loaded into memory,
+and the global functions (listed below) will then not be available. The simple
+approach does not suffer from this problem and is therefore recommended.
 
 =head1 GLOBAL FUNCTIONS
 
@@ -374,7 +410,7 @@ will not be called if any of the functions before threw an exception.
 
 =item validate_templates
 
-I<Documentation pending.>
+I<TODO>
 
 =item xml_pretty
 
@@ -433,8 +469,9 @@ L<TUWF::DB>, L<TUWF::Misc>, L<TUWF::Request>, L<TUWF::Response>, L<TUWF::XML>.
 
 Copyright (c) 2008-2011 Yoran Heling.
 
-This framework is free software available under the liberal MIT license. See
-the COPYING file in the distribution for the details.
+This module is part of the TUWF framework and is free software available under
+the liberal MIT license. See the COPYING file in the TUWF distribution for the
+details.
 
 
 =head1 AUTHOR
