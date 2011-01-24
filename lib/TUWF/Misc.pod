@@ -17,7 +17,16 @@ form is useful if you wish to use a function outside of the TUWF framework.
 
 =head2 formValidate(@fields)
 
-I<TODO>
+Shorthand for calling C<kv_validate()> with the following sources:
+
+  Name    TUWF Method
+   post    reqPost()
+   get     reqGet()
+   param   reqParam()
+   cookie  reqCookie()
+
+The L<validate_templates|TUWF/validate_templates> configuration setting is
+passed as the I<templates> option.
 
 =head2 mail(body, header => value, ..)
 
@@ -43,7 +52,161 @@ JavaScript.
 
 =head2 kv_validate(sources, templates, fields)
 
-I<TODO>
+Validates a set of key/value pairs against a list of constraints and data
+definitions. Returns the (optionally modified) key/value pairs and, if a field
+did not validate, an error indication. This function was designed to validate
+form input data, and can as such also validate keys (or I<fields>) which
+represent multiple values. This function is rarely used directly,
+C<formValidate()> does everything you need when validating common input data.
+
+I<sources> is a hashref explaining where the values should be fetched from.
+Each key in the hash represents the I<name> of the source, and it's value is a
+subroutine reference. This subroutine should accept one argument: the name of
+the field, and is expected return a list of values, or an empty list if there
+are no values with that key. The following example defines a source by the name
+"param", and tells C<kv_validate()> to fetch the values using
+L<reqParam()|TUWF::Request>.
+
+  kv_validate(
+    { param => sub { $TUWF::OBJ->reqParam(shift) } },
+    ..
+  );
+
+The I<templates> argument should be reference to a (possibly empty) hash
+providing templates for commonly used constraints and data definitions.
+
+The I<fields> argument should be an arrayref, where each item in the array
+represents a single field. Each field should be a hashref with options. The
+following options are accepted:
+
+=over
+
+=item <source name> => <field name>
+
+String, indicates from which source the field should be fetched, and which name
+to use. Note that even though C<kv_validate()> accepts validating data from
+multiple sources, each field should only have one source option, and there
+should not be a field from a different source with the same name.
+
+Using the I<sources> example above, specifying C<param =E<gt> 'foo'> as field
+option tells C<kv_validate()> to fetch the value(s) for this field from
+C<reqParam('foo')>.
+
+=item required
+
+0/1. Indicates whether the field is required or not. Default: 1.
+
+=item default
+
+Specifies the default value to return when the field is not present or left
+empty. Only makes sense for fields that are not required.
+
+=item rmwhitespace
+
+0/1. Removes any whitespace before and after the value before doing any other
+validation. All occurences of C<\r> are also removed from the value. Default:
+1.
+
+=item maxlength
+
+Number. Maximum length (in number of characters) of the value.
+
+=item minlength
+
+Number. Minimum length of the value.
+
+=item enum
+
+Arrayref. The value must be equal to any of the strings in the array. Note that
+even though a string comparison is used, this works fine numbers as well.
+
+=item max
+
+Number. The value must be lower than the indicated number (using numeric
+comparison). This option implies that the value must be a number.
+
+=item min
+
+Number. See I<max>.
+
+=item regex
+
+Validate the value against a regular expression. For identification, this
+option can also be set to an arrayref, of which the first item contains the
+regular expression. All other elements in the array are ignored by
+C<kv_validate()>, but are still returned in the error structure and can
+therefore be used in your code.
+
+=item func
+
+Subroutine reference. Validate the value against a function. The subroutine
+should return false if the value is invalid. Since the actual value variable is
+passed to the subroutine, it is allowed to modify it in-place. This can be
+useful for normalizing or de-serializing values. This constraint is always
+executed last. This option can also be set to an arrayref, which works the same
+as with the I<regex> option.
+
+=item template
+
+String, refers to a key in the I<templates> hash. Validates the value against
+the options in I<%{$templates{$string}}>, which may contain any of the above
+mentioned options (except <source name>).
+
+=item multi
+
+0/1, indicates whether there should be only one value or multiple values. If
+this option is disabled (as is the default), only the first value will be
+validated and returned.  Otherwise, each value is validated separately against
+the above options and an arrayref with values is returned. Validating this
+field is stopped when one value does not match. The I<required> and I<default>
+options are also evaluated per-value: if required is true, each value should be
+non-empty. Empty values are set to the default.
+
+=item maxcount
+
+Number. When I<multi> is true, specifies the maximum number of values to be
+present. Whether they are empty or not is ignored in this count.
+
+=item mincount
+
+Number. See I<mincount>.
+
+=back
+
+C<kv_validate()> returns a hashref with field name to value mappings. When one
+or more fields did not validate, a special C<_err> field is added. Its value is
+an arrayref where each item represents an invalid field. Each invalid field is
+represented again by an arrayref containing three items: the name of the field,
+the option that caused it to fail and the value of that option.
+
+Example:
+
+  my $r = kv_validate(
+    # sources
+    { param => sub { $TUWF::OBJ->reqParam(shift) } },
+    # templates
+    { crc32_hex => {
+      regex => qr/^[0-9a-f]+$/i,
+      maxlength => 8,
+      minlength => 8,
+    } },
+    # field definitions
+    [
+      { param => 'name', maxlength => 100 },
+      { param => 'age',  min => 18, max => 120 },
+      { param => 'crc',  required => 0, template => 'crc32_hex' },
+    ],
+  );
+
+  # $r will look something like:
+  {
+    name => 'John Doe',
+    age => 28,
+    crc => 'This does not look like a CRC32 string',
+    _err => [
+      [ 'crc', 'template', 'crc32_hex' ]
+    ]
+  }
 
 =head1 SEE ALSO
 

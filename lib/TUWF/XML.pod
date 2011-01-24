@@ -92,7 +92,7 @@ Set to a positive integer to pretty-print the generated XML, set to 0 to
 disable pretty-printing. The integer indicates the number of spaces to use for
 each new level of indentation. It is recommended to have pretty-printing
 disabled when generating HTML, since white-space around HTML elements tends to
-have significance when being rendering, and with pretty-printing you will lose
+have significance when being rendered, and with pretty-printing you will lose
 the control on where to (not) insert whitespace. Default: 0 (disabled).
 
 =back

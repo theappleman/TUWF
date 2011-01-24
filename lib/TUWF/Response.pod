@@ -4,7 +4,7 @@ TUWF::Response - Response generation methods for TUWF
 
 =head1 DESCRIPTION
 
-This module is used to generate HTTP responses, it is automatically loaded by
+This module is used to generate a HTTP response. It is automatically loaded by
 TUWF and its methods can be used without requiring any special work.
 
 This module can not be used outside of the TUWF framework.

@@ -51,9 +51,9 @@ parameters and values, and in scalar context the value of the POST parameter
 has priotity over the GET value.
 
 This function behaves similar to the C<param()> function of many CGI libraries,
-with the exception that (like all other TUWF methods) C<reqMethod()> returns
-all data in Perls native unicode format and that for file uploads, the file
-name is returned instead of its contents.
+with the exception that (like all other TUWF methods) C<reqParam()> returns all
+data in Perls native unicode format and that for file uploads, the file name is
+returned instead of its contents.
 
 =head2 reqUploadMIME(name)
 
@@ -123,8 +123,8 @@ header or an empty string if the header is not present.
 Header names are matched case-insensitive. The returned header names may not
 use the actual capitalization as used by the client. Some web servers may hide
 some request headers from the script. In particular, the C<Content-Type> and
-C<Content-Length> headers with POSTS requests may not be present, even when
-they have been sent by the client.
+C<Content-Length> headers with POST requests may not be present, even when they
+have been sent by the client.
 
 =head2 reqPath()
 
@@ -149,7 +149,7 @@ C<reqHeader('Host')>.
 =head2 reqIP()
 
 Returns the IP address of the client. Note that this may be an IPv4 or IPv6
-address, depending on your webserver configuration.
+address, depending on the configuration of your webserver.
 
 
 =head1 SEE ALSO

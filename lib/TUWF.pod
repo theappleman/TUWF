@@ -103,10 +103,10 @@ by means of modules.
 TUWF is the result of years of evolution, from one implementation to another
 and from one design to another. The reason TUWF has become what it is now is
 because of this unconstrained evolution. Providing backward compatibility in
-many cases complicates the implementation of new ideas and may add bloat to the
-framework. For this reason, future versions of TUWF may work differently from
-older versions, and may not be backward compatible with code generated for an
-older version.
+many cases complicates the implementation of new ideas and may add unwanted
+bloat to the framework. For this reason, future versions of TUWF may work
+differently from older versions, and may not be backward compatible with code
+written for an older version.
 
 When using TUWF for your project, it is adviced to get one version of TUWF and
 stick to that, until you have time to check out a later version and update your
@@ -155,12 +155,12 @@ different functions and files, without having to constantly load and import
 your utility modules in each file that uses them.
 
 Of course, with all exported functions being imported into a single namespace,
-this does call for some function naming conventions to avoid function name
-conflicts and other confusing issues. The main TUWF methods use camelCase and
-are often prefixed with a short identifier to indicate to which module or
-section they belong. For example, the L<TUWF::Request|TUWF::Request> methods
-all start with C<req> and L<TUWF::Response|TUWF::Response> with C<res>. It is a
-good idea to adopt this style when you write your own methods.
+this does call for some function naming conventions to avoid name conflicts and
+other confusing issues. The main TUWF methods use camelCase and are often
+prefixed with a short identifier to indicate to which module or section they
+belong. For example, the L<TUWF::Request|TUWF::Request> methods all start with
+C<req> and L<TUWF::Response|TUWF::Response> with C<res>. It is a good idea to
+adopt this style when you write your own methods.
 
 Be warned that the data in the TUWF object may or may not persist among
 multiple requests, depending on whether your script is running in FastCGI or
@@ -174,7 +174,7 @@ C<pre_request_handler> is useful for such practice.
 =head2 Utility functions
 
 Besides the above mentioned methods, TUWF also provides various handy
-functions. These functions are provided by several TUWF submodules (e.g.
+functions. These functions are implemented in the TUWF submodules (e.g.
 L<TUWF::Misc|TUWF::Misc>) and can be imported manually through these modules.
 Check out the L<SEE ALSO|/"SEE ALSO"> below for the list of submodules.
 
@@ -410,7 +410,11 @@ will not be called if any of the functions before threw an exception.
 
 =item validate_templates
 
-I<TODO>
+Hashref, templates for the L<kv_validate()|TUWF::Misc> function when called
+using L<formValidate()|TUWF::Misc>.
+
+I<TODO: Having to specify all templates at once does not really promote proper
+code design. Need to find a more flexible way to do this.>
 
 =item xml_pretty
 
