@@ -144,10 +144,10 @@ sub sqlhelper { # type, query, @list
   # count and log, if requested
   my $itv = Time::HiRes::tv_interval($start) if $self->debug || $self->{_TUWF}{log_slow_pages} || $self->{_TUWF}{log_queries};
 
-  $self->log(sprintf '[%7.2ms] %s | %s', $q[0], $itv*1000, DBI::neat_list([@q[1..$#q]]))
+  $self->log(sprintf '[%7.2fms] %s | %s', $itv*1000, $q[0], DBI::neat_list([@q[1..$#q]]))
     if $self->{_TUWF}{log_queries};
 
-  push(@{$self->{_TUWF}{DB}{queries}}, [ \@q,  ]) if $self->debug || $self->{_TUWF}{log_slow_pages};
+  push(@{$self->{_TUWF}{DB}{queries}}, [ \@q, $itv ]) if $self->debug || $self->{_TUWF}{log_slow_pages};
 
   # re-throw the error in the context of the calling code
   croak $s->errstr if !$ret;

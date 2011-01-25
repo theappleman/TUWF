@@ -43,7 +43,7 @@ sub kv_validate {
       push @err, [ $f->{$src}, $$valid, $f->{$$valid} ];
       last;
     }
-    $ret{$f->{name}} = $f->{multi} ? \@values : $values[0];
+    $ret{$f->{$src}} = $f->{multi} ? \@values : $values[0];
 
     # check mincount/maxcount
     push @err, [ $f->{$src}, 'mincount', $f->{mincount} ] if $f->{mincount} && @values < $f->{mincount};
@@ -73,7 +73,7 @@ sub _validate { # value, \%templates, \%rules
   }
 
   # empty
-  if(length($v) < 1) {
+  if(!defined($v) || length($v) < 1) {
     return \'required' if $r->{required};
     return exists $r->{default} ? $r->{default} : $v;
   }
@@ -82,12 +82,12 @@ sub _validate { # value, \%templates, \%rules
   return \'minlength' if $r->{minlength} && length $v < $r->{minlength};
   return \'maxlength' if $r->{maxlength} && length $v > $r->{maxlength};
   # min/max
-  return \'min'       if $r->{min} && (!looks_like_number($v) || $v < $r->{min});
-  return \'max'       if $r->{max} && (!looks_like_number($v) || $v > $r->{max});
+  return \'min'       if defined($r->{min}) && (!looks_like_number($v) || $v < $r->{min});
+  return \'max'       if defined($r->{max}) && (!looks_like_number($v) || $v > $r->{max});
   # enum
   return \'enum'      if $r->{enum} && !grep $_ eq $v, @{$r->{enum}};
   # regex
-  return \'regex'     if $r->{regex} && $v !~ (ref($r->{regex}) eq 'ARRAY' ? m/$r->{regex}[0]/ : m/$r->{regex}/);
+  return \'regex'     if $r->{regex} && (ref($r->{regex}) eq 'ARRAY' ? ($v !~ m/$r->{regex}[0]/) : ($v !~  m/$r->{regex}/));
   # template
   return \'template'  if $r->{template} && ref($v = _validate($v, $t, $t->{$r->{template}}));
   # function
@@ -106,7 +106,7 @@ sub formValidate {
       get    => sub { $self->reqGet(shift)    },
       param  => sub { $self->reqParam(shift)  },
       cookie => sub { $self->reqCookie(shift) },
-    }, %{ $self->{_TUWF}{validate_templates} || {} },
+    }, $self->{_TUWF}{validate_templates} || {},
     \@fields
   );
 }
