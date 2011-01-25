@@ -132,7 +132,7 @@ sub _parse_cookies {
     s/ +$//;
     next if !$_ || !m{^([^\(\)<>@,;:\\"/\[\]\?=\{\}\t\s]+)=("?)(.*)\2$};
     my($n, $v) = ($1, $3);
-    next if $self->{_TUWF}{cookie_prefix} && !s/^\Q$self->{_TUWF}{cookie_prefix}\E//;
+    next if $self->{_TUWF}{cookie_prefix} && !($n =~ s/^\Q$self->{_TUWF}{cookie_prefix}\E//);
     $dat{$n} = $v if !exists $dat{$n};
   }
   return \%dat;
