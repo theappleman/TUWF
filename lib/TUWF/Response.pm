@@ -87,11 +87,11 @@ sub resCookie {
   my $value = shift;
   my %o = ($self->{_TUWF}{cookie_defaults} ? %{$self->{_TUWF}{cookie_defaults}} : (), @_);
 
-  my @attr = (sprintf '%s=%s', $name, defined($value)?$value:'');
   $name = "$self->{_TUWF}{cookie_prefix}$name" if $self->{_TUWF}{cookie_prefix};
+  my @attr = (sprintf '%s=%s', $name, defined($value)?$value:'');
   $o{expires} = 0 if !defined $value;
 
-  push @attr, sprintf 'expires=%s', strftime("%a, %d %b %Y %H:%M:%S GMT", gmtime $o{expires}) if defined $o{expire};
+  push @attr, sprintf 'expires=%s', strftime("%a, %d %b %Y %H:%M:%S GMT", gmtime $o{expires}) if defined $o{expires};
   push @attr, "path=$o{path}" if $o{path};
   push @attr, "domain=$o{domain}" if $o{domain};
   push @attr, 'secure'   if $o{secure};
