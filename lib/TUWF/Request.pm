@@ -25,6 +25,7 @@ sub reqInit {
 
   $self->{_TUWF}{Req}{Cookies} = _parse_cookies($self, $ENV{HTTP_COOKIE} || $ENV{COOKIE});
   $self->{_TUWF}{Req}{GET} = _parse_urlencoded($ENV{QUERY_STRING});
+  $self->reqPath(); # let it croak when the path isn't valid UTF-8
 
   my $meth = $self->reqMethod;
   return 'method' if $meth !~ /^(GET|POST|HEAD)$/;
@@ -48,7 +49,7 @@ sub reqInit {
 
 sub _parse_urlencoded {
   my %dat;
-  for (split /[;&]/, decode_utf8 shift) {
+  for (split /[;&]/, decode_utf8 shift, 1) {
     my($key, $val) = split /=/, $_, 2;
     next if !defined $key or !defined $val;
     for ($key, $val) {
@@ -56,7 +57,7 @@ sub _parse_urlencoded {
       # assume %XX sequences represent UTF-8 bytes and properly decode it.
       s#((?:%[0-9a-fA-F]{2})+)#
         (my $s=encode_utf8 $1) =~ s/%(.{2})/chr hex($1)/eg;
-        decode_utf8($s);
+        decode_utf8($s, 1);
       #eg;
       s/%u([0-9a-fA-F]{4})/chr hex($1)/eg;
     }
@@ -98,7 +99,7 @@ sub _parse_multipart {
       }
     }
 
-    $name = decode_utf8 $name;
+    $name = decode_utf8 $name, 1;
 
     # In the case of a file upload, use the filename as value instead of the
     # data. This is to ensure that reqPOST() always returns decoded data.
@@ -108,11 +109,11 @@ sub _parse_multipart {
     # regular form element. The standards do not require the filename to be
     # present, but I am not aware of any browser that does not send it.
     if($filename) {
-      push @{$nfo->{POST}{$name}}, decode_utf8 $filename;
-      push @{$nfo->{MIMES}{$name}}, decode_utf8 $mime;
+      push @{$nfo->{POST}{$name}}, decode_utf8 $filename, 1;
+      push @{$nfo->{MIMES}{$name}}, decode_utf8 $mime, 1;
       push @{$nfo->{FILES}{$name}}, $value; # not decoded, can be binary
     } else {
-      push @{$nfo->{POST}{$name}}, decode_utf8 $value;
+      push @{$nfo->{POST}{$name}}, decode_utf8 $value, 1;
     }
   }
 }
@@ -127,7 +128,7 @@ sub _parse_cookies {
   # implementations all differ in how they interpret the data. This (rather)
   # lazy implementation assumes the cookie values are not escaped and don't
   # contain any characters that are used within the header format.
-  for (split /[;,]/, decode_utf8 $str) {
+  for (split /[;,]/, decode_utf8 $str, 1) {
     s/^ +//;
     s/ +$//;
     next if !$_ || !m{^([^\(\)<>@,;:\\"/\[\]\?=\{\}\t\s]+)=("?)(.*)\2$};
@@ -215,7 +216,7 @@ sub reqCookie {
 
 
 sub reqMethod {
-  return decode_utf8 $ENV{REQUEST_METHOD}||'GET';
+  return $ENV{REQUEST_METHOD}||'GET';
 }
 
 
@@ -228,13 +229,13 @@ sub reqHeader {
   my($self, $name) = @_;
   if($name) {
     (my $v = uc $_[1]) =~ tr/-/_/;
-    return decode_utf8 $ENV{"HTTP_$v"}||'';
+    return $ENV{"HTTP_$v"}||'';
   } else {
     return (map {
       if(/^HTTP_/) { 
         (my $h = lc $_) =~ s/_([a-z])/-\U$1/g;
         $h =~ s/^http-//;
-        decode_utf8 $h;
+        decode_utf8 $h, 1;
       } else { () }
     } sort keys %ENV);
   }
@@ -244,29 +245,29 @@ sub reqHeader {
 # returns the path part of the current URI, excluding the leading slash
 sub reqPath {
   (my $u = ($ENV{REQUEST_URI}||'')) =~ s{^/+}{};
-  return decode_utf8 $u;
+  return decode_utf8 $u, 1;
 }
 
 
 # returns base URI, excluding trailing slash
 sub reqBaseURI {
-  return decode_utf8($ENV{HTTPS} ? 'https://' : 'http://').shift->reqHost();
+  return ($ENV{HTTPS} ? 'https://' : 'http://').shift->reqHost();
 }
 
 
 sub reqURI {
   my $s = shift;
-  return $s->reqBaseURI().'/'.$s->reqPath().decode_utf8($ENV{QUERY_STRING} ? '?'.$ENV{QUERY_STRING} : '');
+  return $s->reqBaseURI().'/'.$s->reqPath().decode_utf8($ENV{QUERY_STRING} ? '?'.$ENV{QUERY_STRING} : '', 1);
 }
 
 
 sub reqHost {
-  return decode_utf8 $ENV{HTTP_HOST}||'localhost';
+  return $ENV{HTTP_HOST}||'localhost';
 }
 
 
 sub reqIP {
-  return decode_utf8 $ENV{REMOTE_ADDR}||'0.0.0.0';
+  return $ENV{REMOTE_ADDR}||'0.0.0.0';
 }
 
 
