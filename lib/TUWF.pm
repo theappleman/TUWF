@@ -23,6 +23,10 @@ our $OBJ = bless {
     error_405_handler => \&_error_405,
     error_413_handler => \&_error_413,
     error_500_handler => \&_error_500,
+    log_format => sub {
+      my($self, $uri, $msg) = @_;
+      sprintf "[%s] %s -> %s\n", scalar localtime(), $uri, $msg;
+    },
   }
 }, 'TUWF::Object';
 
@@ -283,12 +287,10 @@ sub _handle_request {
     my($sqlt, $sqlc) = (0, 0);
     if($self->{_TUWF}{db_login}) {
       $sqlc = grep $_->[0] ne 'ping/rollback' && $_->[0] ne 'commit', @{$self->{_TUWF}{DB}{queries}};
-      $sqlt += $_->[1]*1000
-        for (@{$self->{_TUWF}{DB}{queries}});
+      $sqlt += $_->[1]*1000 for (@{$self->{_TUWF}{DB}{queries}});
     }
 
-    $self->log(sprintf('%4dms (SQL:%4dms,%3d qs)',
-      $time, $sqlt, $sqlc, $self->reqURI), 1);
+    $self->log(sprintf('%4dms (SQL:%4dms,%3d qs)', $time, $sqlt, $sqlc, $self->reqURI));
   }
 }
 
@@ -302,15 +304,22 @@ sub debug {
 # writes a message to the log file. date, time and URL are automatically added
 sub log {
   my($self, $msg) = @_;
+
+  # temporarily disable the warnings-to-log, to avoid infinite recursion if
+  # this function throws a warning.
+  my $old = $SIG{__WARN__};
+  $SIG{__WARN__} = undef;
+
   chomp $msg;
   $msg =~ s/\n/\n  | /g;
   if($self->{_TUWF}{logfile} && open my $F, '>>:utf8', $self->{_TUWF}{logfile}) {
     flock $F, 2;
     seek $F, 0, 2;
-    printf $F "[%s] %s -> %s\n", scalar localtime(), $self->{_TUWF}{Req} ? $self->reqURI : '[init]', $msg;
+    print $F $self->{_TUWF}{log_format}->($self, $self->{_TUWF}{Req} ? $self->reqURI : '[init]', $msg);
     flock $F, 4;
     close $F;
   }
+  $SIG{__WARN__} = $old;
 }
 
 
