@@ -63,7 +63,7 @@ sub _validate { # value, \%templates, \%rules
 
   croak "Template $r->{template} not defined." if $r->{template} && !$t->{$r->{template}};
   $r->{required}++ if not exists $r->{required};
-  $r->{whitespace}++ if not exists $r->{whitespace};
+  $r->{rmwhitespace}++ if not exists $r->{rmwhitespace};
 
   # remove whitespace
   if($v && $r->{rmwhitespace}) {
