@@ -287,7 +287,7 @@ sub _handle_request {
         for (@{$self->{_TUWF}{DB}{queries}});
     }
 
-    $self->log(sprintf('>%4dms (SQL:%4dms,%3d qs) for %s',
+    $self->log(sprintf('%4dms (SQL:%4dms,%3d qs)',
       $time, $sqlt, $sqlc, $self->reqURI), 1);
   }
 }
@@ -300,16 +300,14 @@ sub debug {
 
 
 # writes a message to the log file. date, time and URL are automatically added
-# An optional 3rd argument can be passed to exclude the date, time and url information
 sub log {
-  my($self, $msg, $excl) = @_;
+  my($self, $msg) = @_;
   chomp $msg;
   $msg =~ s/\n/\n  | /g;
   if($self->{_TUWF}{logfile} && open my $F, '>>:utf8', $self->{_TUWF}{logfile}) {
     flock $F, 2;
     seek $F, 0, 2;
-    printf $F "[%s] %s: %s\n", scalar localtime(), $self->reqURI||'[init]', $msg if !$excl;
-    print $F "$msg\n" if $excl;
+    printf $F "[%s] %s -> %s\n", scalar localtime(), $self->{_TUWF}{Req} ? $self->reqURI : '[init]', $msg;
     flock $F, 4;
     close $F;
   }

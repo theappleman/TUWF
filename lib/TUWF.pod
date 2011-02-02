@@ -450,14 +450,13 @@ for the methods it provides.
 
 Returns the value of the I<debug> setting.
 
-=head2 log(message, exclude_info)
+=head2 log(message)
 
 Writes a message to the log file configured with I<logfile>. When no log file
 is configured, C<log()> will do nothing. The I<message> argument may contain
 newlines, which will be nicely (re-)formatted before logging, in order to avoid
-ambiguity with other log entries. By default the log message will be prefixed
-with the date and URI, but this can be disabled by setting I<exclude_info> to a
-true value.
+ambiguity with other log entries. The log message will be prefixed with the
+date and URI of the request.
 
 This function is not used very often in practice, since it is easier to simply
 use Perl's C<warn()> function instead. TUWF automatically writes all warnings
