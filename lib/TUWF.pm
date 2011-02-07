@@ -31,6 +31,7 @@ our $OBJ = bless {
       my($self, $uri, $msg) = @_;
       sprintf "[%s] %s -> %s\n", scalar localtime(), $uri, $msg;
     },
+    validate_templates => {},
   }
 }, 'TUWF::Object';
 
@@ -46,8 +47,9 @@ sub import {
 }
 
 
-# set TUWF configuration variables
+# get or set TUWF configuration variables
 sub set {
+  return $OBJ->{_TUWF}{$_[0]} if @_ == 1;
   $OBJ->{_TUWF} = { %{$OBJ->{_TUWF}}, @_ };
 }
 

@@ -265,7 +265,9 @@ additional arguments.
 
 =head2 TUWF::set(key => value, ..)
 
-Set TUWF configuration variables.
+Get or set TUWF configuration variables. When called with only one argument,
+will return the configuration variable with that key. Otherwise the number of
+arguments must be a multiple of 2, setting the configuration parameters.
 
 =over
 
@@ -438,10 +440,10 @@ will not be called if any of the functions before threw an exception.
 =item validate_templates
 
 Hashref, templates for the L<kv_validate()|TUWF::Misc> function when called
-using L<formValidate()|TUWF::Misc>.
+using L<formValidate()|TUWF::Misc>. The recommended way to add new templates is
+to call C<TUWF::set()> with a single argument:
 
-I<TODO: Having to specify all templates at once does not really promote proper
-code design. Need to find a more flexible way to do this.>
+  TUWF::set('validate_templates')->{$key} = \%validate_options;
 
 =item xml_pretty
 
