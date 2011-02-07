@@ -199,6 +199,9 @@ script, however, will cause the main TUWF code to not be loaded into memory,
 and the global functions (listed below) will then not be available. The simple
 approach does not suffer from this problem and is therefore recommended.
 
+
+
+
 =head1 GLOBAL FUNCTIONS
 
 The main TUWF namespace contains several functions used to initialize the
@@ -463,6 +466,7 @@ idea to assume either way, so you want to avoid putting any run-time code after
 calling C<TUWF::run()>.
 
 
+
 =head1 BASIC METHODS
 
 This section documents the basic TUWF object methods provided by TUWF.pm. The
@@ -486,6 +490,105 @@ L<log_format|/log_format> setting.
 This function is not used very often in practice, since it is easier to simply
 use Perl's C<warn()> function instead. TUWF automatically writes all warnings
 to the log file.
+
+
+
+=head1 SERVER CONFIGURATION
+
+Since a website written using TUWF consists of a single Perl script that acts
+as the main script for your site, the only thing you have to do is tell your
+webserver to run it. There are generally two things you should take care of:
+
+=over
+
+=item 1.
+
+You can run the script as CGI or FastCGI script. In the case of FastCGI, you
+will need the L<FCGI|FCGI> module.
+
+=item 2.
+
+You have to make sure all requests to non-existing files are passed to your
+script, in order for the URI rewriting in TUWF to work.
+
+=back
+
+The following examples show how to configure your server to run the
+C<examples/singlefile.pl> script from the TUWF distribution. I assume the TUWF
+distribution is unpacked in C</tuwf> and the site runs on the hostname
+C<test.example.com>.
+
+=head2 Examples for Apache (2.2)
+
+CGI mode:
+
+  <VirtualHost *:*>
+    ServerName test.example.com
+    DocumentRoot /tuwf/examples
+    AddHandler cgi-script .pl
+
+    # %{REQUEST_FILENAME} does not seem to always work inside a <VirtualHost>
+    # But it should be equivalent to "%{DOCUMENT_ROOT}/%{REQUEST_URI}"
+    RewriteEngine On
+    RewriteCond "%{DOCUMENT_ROOT}/%{REQUEST_URI}" !-s
+    RewriteRule ^/ /singlefile.pl
+  </VirtualHost>
+
+It is possible to move the mod_rewrite statements into a .htaccess file, in
+which case you can remove the C<Rewrite*> lines in the above example and put
+the following in your .htaccess file:
+
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-s
+  RewriteRule ^/ /singlefile.pl
+
+FastCGI mode, using C<mod_fcgid>. With this configuration it is possible to
+have the documentroot point to a different directory than where the TUWF script
+resides, which could improve security.
+
+  <VirtualHost *:*>
+    ServerName test.example.com
+    DocumentRoot /whatever/you/want
+    AddHandler fcgid-script .pl
+    FcgidWrapper /tuwf/examples/singlefile.pl virtual
+
+    # same as above example, except 'singlefile.pl' can be anything,
+    # as long as it ends with '.pl'
+    RewriteEngine On
+    RewriteCond "%{DOCUMENT_ROOT}/%{REQUEST_URI}" !-s
+    RewriteRule ^/ /singlefile.pl
+  </VirtualHost>
+
+Again, it is possible to move the rewrites into a .htaccess. All of the above
+examples assume the referenced directories have the appropriate options set
+using a C<E<lt>DirectoryE<gt>> clause.
+
+
+=head2 Examples for lighttpd (1.4)
+
+CGI mode:
+
+  $HTTP["host"] == "test.example.com" {
+    server.document-root = "/tuwf/examples"
+    cgi.assign = ( ".cgi" => "" )
+    server.error-handler-404 = "/singlefile.pl"
+  }
+
+FastCGI:
+
+  fastcgi.server = (
+    ".singlefile" => ((
+      "socket"            => "/tmp/perl-tuwf-singlefile.socket",
+      "bin-path"          => "/tuwf/examples/singlefile.pl",
+      "check-local"       => "disable"
+    ))
+  )
+
+  $HTTP["host"] == "test.example.com" {
+    server.document-root = "/whatever/you/want"
+    cgi.assign = ( ".cgi" => "" )
+    server.error-handler-404 = "/something.singlefile"
+  }
 
 
 =head1 SEE ALSO
