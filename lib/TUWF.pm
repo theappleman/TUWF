@@ -126,6 +126,7 @@ sub _very_simple_page {
   my($s, $code, $title, $msg) = @_;
   $s->resInit;
   $s->resStatus($code);
+  $s->resHeader(Allow => 'GET, HEAD, POST') if $code == 405;
   my $fd = $s->resFd;
   print $fd <<__;
 <!DOCTYPE html
