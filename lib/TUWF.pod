@@ -492,6 +492,12 @@ to the log file.
 
 L<TUWF::DB>, L<TUWF::Misc>, L<TUWF::Request>, L<TUWF::Response>, L<TUWF::XML>.
 
+The homepage of TUWF can be found at
+L<http://dev.yorhel.nl/tuwf|http://dev.yorhel.nl/tuwf>.
+
+TUWF is available on a git repository at
+L<http://g.blicky.net/tuwf.git/|http://g.blicky.net/tuwf.git/>.
+
 
 =head1 COPYRIGHT
 

@@ -24,14 +24,23 @@ Optional dependencies:
 
 
 Installing:
-  (Requires Module::Build)
 
-  perl Build.PL
-  ./Build
-  ./Build install
+  If you have obtained a TUWF package and do not have Module::Build installed:
+
+    perl Makefile.PL
+    make
+    make install
+
+  Otherwise:
+
+    perl Build.PL
+    ./Build
+    ./Build install
 
 
 Contact
 
-  projects@yorhel.nl
+  Homepage: http://dev.yorhel.nl/tuwf
+       Git: http://g.blicky.net/tuwf.git/
+     Email: projects@yorhel.nl
 
