@@ -23,9 +23,15 @@ sub reqInit {
       if ($ENV{REQUEST_URI}||'') =~ /\?/;
   }
 
-  $self->{_TUWF}{Req}{Cookies} = _parse_cookies($self, $ENV{HTTP_COOKIE} || $ENV{COOKIE});
-  $self->{_TUWF}{Req}{GET} = _parse_urlencoded($ENV{QUERY_STRING});
-  $self->reqPath(); # let it croak when the path isn't valid UTF-8
+  my $err = eval {
+    $self->{_TUWF}{Req}{Cookies} = _parse_cookies($self, $ENV{HTTP_COOKIE} || $ENV{COOKIE});
+    $self->{_TUWF}{Req}{GET} = _parse_urlencoded($ENV{QUERY_STRING});
+    $self->reqPath(); # let it croak when the path isn't valid UTF-8
+    1;
+  };
+  return 'utf8' if !$err && $@ && $@ =~ /does not map to Unicode/; # <- UGLY!
+  # re-throw if it wasn't a UTF-8 problem. I don't expect this to happen
+  die $@ if !$err;
 
   my $meth = $self->reqMethod;
   return 'method' if $meth !~ /^(GET|POST|HEAD)$/;
@@ -36,11 +42,16 @@ sub reqInit {
     my $data;
     die "Couldn't read all POST data.\n" if $ENV{CONTENT_LENGTH} > read STDIN, $data, $ENV{CONTENT_LENGTH}, 0;
 
-    if(($ENV{'CONTENT_TYPE'}||'') =~ m{^multipart/form-data; boundary=(.+)$}) {
-      _parse_multipart($self, $data, $1);
-    } else {
-      $self->{_TUWF}{Req}{POST} = _parse_urlencoded($data);
-    }
+    $err = eval {
+      if(($ENV{'CONTENT_TYPE'}||'') =~ m{^multipart/form-data; boundary=(.+)$}) {
+        _parse_multipart($self, $data, $1);
+      } else {
+        $self->{_TUWF}{Req}{POST} = _parse_urlencoded($data);
+      }
+      1;
+    };
+    return 'utf8' if !$err && $@ && $@ =~ /does not map to Unicode/;
+    die $@ if !$err;
   }
 
   return '';

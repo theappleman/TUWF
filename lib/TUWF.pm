@@ -19,6 +19,7 @@ our $OBJ = bless {
     mail_from => '<noreply-yawf@blicky.net>',
     mail_sendmail => '/usr/sbin/sendmail',
     max_post_body => 10*1024*1024, # 10MB
+    error_400_handler => \&_error_400,
     error_404_handler => \&_error_404,
     error_405_handler => \&_error_405,
     error_413_handler => \&_error_413,
@@ -114,6 +115,7 @@ sub load_recursive {
 
 
 # the default error handlers are quite ugly and generic...
+sub _error_400 { _very_simple_page($_[0], 400, '400 - Bad Request', 'Only UTF-8 encoded data is accepted.') }
 sub _error_404 { _very_simple_page($_[0], 404, '404 - Page Not Found', 'The page you were looking for does not exist...') }
 sub _error_405 { _very_simple_page($_[0], 405, '405 - Method not allowed', 'The only allowed methods are: HEAD, GET or POST.') }
 sub _error_413 { _very_simple_page($_[0], 413, '413 - Request Entity Too Large', 'You were probably trying to upload a too large file.') }
@@ -200,6 +202,8 @@ sub _handle_request {
     # initialize request
     my $err = $self->reqInit();
     if($err) {
+      warn "Client sent non-UTF-8-encoded data. Generating HTTP 400 response.\n" if $err eq 'utf8';
+      $self->{_TUWF}{error_400_handler}->($self) if $err eq 'utf8';
       $self->{_TUWF}{error_405_handler}->($self) if $err eq 'method';
       $self->{_TUWF}{error_413_handler}->($self) if $err eq 'maxpost';
       return 1;

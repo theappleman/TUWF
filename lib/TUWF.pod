@@ -326,6 +326,13 @@ I<logfile> is specified, TUWF will log page generation times for each request.
 This flag can be easily read through the C<debug()> method, so you can also use
 is in your own code. Default: 0 (disabled).
 
+=item error_400_handler
+
+Similar to I<error_404_handler>, but is called when something in the request
+data did not make sense to TUWF. In the current implementation, this only
+happens when the request data contains non-UTF8-encoded text. A warning is
+written to the log file when this happens.
+
 =item error_404_handler
 
 Set this to a subroutine reference if you want to write your own 404 error
