@@ -7,6 +7,9 @@ use strict;
 use warnings;
 use Carp 'croak';
 
+our $VERSION = '0.1';
+
+
 # Store the object in a global variable for some functions that don't get it
 # passed as an argument. This will break when:
 #  - using a threaded environment (threading sucks anyway)

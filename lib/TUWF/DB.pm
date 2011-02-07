@@ -4,8 +4,9 @@ package TUWF::DB;
 use strict;
 use warnings;
 use Carp 'croak';
-
 use Exporter 'import';
+
+our $VERSION = '0.1';
 our @EXPORT = qw|
   dbInit dbh dbCheck dbDisconnect dbCommit dbRollBack
   dbExec dbRow dbAll dbPage
