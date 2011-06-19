@@ -34,12 +34,12 @@ BEGIN {
   # boolean (self-closing) tags
   %htmlbool = map +($_,1), qw| area base br img input Link param source |;
 
+  # XXX: This forces HTML5-only subroutines to be created, even in html mode
+  @htmltags = (@html5tags, @htmltags);
+
   # functions to export
   @htmlexport = (@htmltags, qw| html lit txt tag end wbr |);
   @xmlexport = qw| xml lit txt tag end |;
-
-  # XXX: This forces HTML5-only subroutines to be created, even in html mode
-  @htmltags = (@html5tags, @htmltags);
 
   # create the subroutines to map to the html tags
   no strict 'refs';
