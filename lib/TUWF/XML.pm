@@ -11,10 +11,17 @@ use Carp 'carp', 'croak';
 
 
 our $VERSION = '0.2';
-our(@EXPORT_OK, %EXPORT_TAGS, @htmltags, @htmlexport, @xmlexport, %htmlbool, $OBJ);
+our(@EXPORT_OK, %EXPORT_TAGS, @html5tags, @htmltags, @htmlexport, @xmlexport, %htmlbool, $OBJ);
 
 
 BEGIN {
+  # HTML5 elements
+  @html5tags = qw|
+    article aside audio canvas command datalist details embed figcaption
+    figure footer header hgroup keygen mark meter nav output progress rp
+    rt ruby section summary Time video
+  |;
+
   # xhtml 1.0 tags
   @htmltags = qw|
     a abbr acronym address area b base bdo big blockquote body br button caption
@@ -25,11 +32,14 @@ BEGIN {
   |;
 
   # boolean (self-closing) tags
-  %htmlbool = map +($_,1), qw| area base br img input Link param |;
+  %htmlbool = map +($_,1), qw| area base br img input Link param source |;
 
   # functions to export
-  @htmlexport = (@htmltags, qw| html lit txt tag end |);
+  @htmlexport = (@htmltags, qw| html lit txt tag end wbr |);
   @xmlexport = qw| xml lit txt tag end |;
+
+  # XXX: This forces HTML5-only subroutines to be created, even in html mode
+  @htmltags = (@html5tags, @htmltags);
 
   # create the subroutines to map to the html tags
   no strict 'refs';
@@ -50,6 +60,8 @@ BEGIN {
 
 # the common XHTML doctypes, from http://www.w3.org/QA/2002/04/valid-dtd-list.html
 my %doctypes = split /\r?\n/, <<__;
+html5
+<!DOCTYPE html>
 xhtml1-strict
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 xhtml1-transitional
@@ -158,7 +170,6 @@ sub end {
   $s->lit('</'.$l.'>');
 }
 
-
 sub html {
   my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
   my %o = @_;
@@ -180,6 +191,17 @@ sub xml() {
   $s->lit(qq|<?xml version="1.0" encoding="UTF-8"?>|);
 }
 
+# HTML5 only: wbr (Inserts a line-break opportunity)
+sub wbr {
+  my $s = ref($_[0]) eq __PACKAGE__ ? shift : $OBJ;
+  $s->lit(qq|<wbr|);
+  while(@_ > 1) {
+    my $attr = shift;
+    croak "Invalid XML attribute name" if !$attr || $attr =~ /^[^a-z]/i || $attr =~ / /;
+    $s->lit( qq{ $attr="}.xml_escape(shift).'"');
+  }
+  $s->lit('>');
+}
 
 1;
 

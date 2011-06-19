@@ -138,10 +138,10 @@ following options:
 
 Specify the doctype to use. Can be one of the following:
 
-  xhtml1-strict xhtml1-transitional xhtml1-frameset
+  html5 xhtml1-strict xhtml1-transitional xhtml1-frameset
   xhtml11 xhtml-basic11 xhtml-math-svg
 
-These refer to the doctypes found at
+Apart from I<html>, these refer to the doctypes found at
 L<http://www.w3.org/QA/2002/04/valid-dtd-list.html>. Default: xhtml1-strict.
 
 =item lang
