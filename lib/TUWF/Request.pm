@@ -61,7 +61,8 @@ sub reqInit {
 
 sub _parse_urlencoded {
   my %dat;
-  for (split /[;&]/, decode_utf8 shift, 1) {
+  my $d = shift;
+  for (split /[;&]/, decode_utf8 $d, 1) {
     my($key, $val) = split /=/, $_, 2;
     next if !defined $key or !defined $val;
     for ($key, $val) {
@@ -269,7 +270,8 @@ sub reqBaseURI {
 
 sub reqURI {
   my $s = shift;
-  return $s->reqBaseURI().'/'.$s->reqPath().decode_utf8($ENV{QUERY_STRING} ? '?'.$ENV{QUERY_STRING} : '', 1);
+  my $u = $ENV{QUERY_STRING} ? '?'.$ENV{QUERY_STRING} : '';
+  return $s->reqBaseURI().'/'.$s->reqPath().decode_utf8($u, 1);
 }
 
 
